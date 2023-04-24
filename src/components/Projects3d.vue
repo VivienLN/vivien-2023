@@ -9,6 +9,7 @@
   import * as dat from 'lil-gui'
   import pictureVertexShader from '../shaders/picture-particles/vertex.glsl'
   import pictureFragmentShader from '../shaders/picture-particles/fragment.glsl'
+  import gsap from "gsap"
 
   // Props
   const props = defineProps({
@@ -19,22 +20,33 @@
     settings: {
       type: Object,
       required: false
+    },
+    currentIndex: {
+      type: Number,
+      required: true
     }
   })
 
   // Scene settings with defaults
   const settings = {
     viewpoint: new THREE.Vector3(0, 0, 2),
-    fov: 50,
-    enableGui: true,
-    enableOrbit: !false,
-    enableAxesHelper: !false,
+    fov: 70,
+    enableGui: false,
+    enableOrbit: false,
+    enableAxesHelper: false,
     // Images
-    image3dToPxRatio: 1.5 / 200,
+    image3dToPxRatio: 3 / 200,
     imageParticleColor: 0xffeeaa,
     imageParticleSize: 10,
-    imageParticleMinZ: -1.5,
+    imageParticleMinZ: 0,
     imageParticleMaxZ: 1.5,
+    imageMargin: 2,
+    imageRotationOffset: .8,
+    // Animations
+    navTransitionDuration: 2,
+    navTransitionEase: "power4.inOut",
+    // Override settings with props
+    ...props.settings
   }
 
   // Ref for canvas
@@ -57,18 +69,15 @@
     tjs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   })
 
-  // onMounted callback
+  // Vue callbacks
   onMounted(load)
+  onBeforeUpdate(update)
 
   
   // ===================================================
   // Load assets (called onMounted())
   // ===================================================
   async function load() {
-    
-    console.log('load()')
-    console.log(settings)// Load images 
-
     const loadingManager = new THREE.LoadingManager()
     loadingManager.onStart = () => console.log('starting loading')
     loadingManager.onProgress = () => console.log('loading progress')
@@ -85,10 +94,6 @@
   // Initialize scene (when everything is loaded)
   // ===================================================
   function initScene() {
-
-    console.log('initScene()')
-    console.log(props.projects)
-
     // ThreeJS setup
     const canvas = threeCanvas.value
     tjs.scene = new THREE.Scene()
@@ -100,6 +105,7 @@
     // Camera
     tjs.camera = new THREE.PerspectiveCamera(settings.fov)
     tjs.camera.position.copy(settings.viewpoint)
+    tjs.camera.rotation.z = - Math.PI * 2 / 24
     tjs.scene.add(tjs.camera)
 
     // Orbit Controls
@@ -112,13 +118,18 @@
     tjs.scene.add(tjs.axesHelper)
 
     // For each image, construct a geometry and a mesh
-    // TOTO: remove (for test)
-    // props.projects.forEach(project => {
-    //   let mesh = imageToMesh(project.imageObject)
-    //   tjs.scene.add(mesh)
-    // })
-    let mesh = imageToMesh(props.projects[0].imageObject)
-    tjs.scene.add(mesh)
+    props.projects.forEach((project, i) => {
+      // Create object
+      project.mesh = imageToMesh(project.imageObject)
+      project.mesh.position.y = -i * (project.imageObject.height * settings.image3dToPxRatio + settings.imageMargin)
+      project.mesh.rotation.y = i * settings.imageRotationOffset
+      tjs.scene.add(project.mesh)
+
+      // Camera target for this project
+      let cameraTargetPosition = project.mesh.localToWorld(settings.viewpoint.clone())
+      project.cameraTargetPosition = cameraTargetPosition
+      project.cameraTargetRotation = project.mesh.rotation.y
+    })
 
     // Debug GUI
     if(settings.enableGui) {
@@ -130,6 +141,31 @@
 
     // Start main loop
     refresh()
+
+    // Fire first update of scene (according to index)
+    update()
+  }
+
+  // ===================================================
+  // Update the scene according to current index
+  // ===================================================
+  function update() {
+    let project = props.projects[props.currentIndex]
+    let {x, y, z} = project.cameraTargetPosition
+    gsap.to(tjs.camera.position, {
+        duration: settings.navTransitionDuration,
+        ease: settings.navTransitionEase,
+        x: x,
+        y: y,
+        z: z,
+    })
+    gsap.to(tjs.camera.rotation, {
+        duration: settings.navTransitionDuration,
+        ease: settings.navTransitionEase,
+        x: 0,
+        y: project.cameraTargetRotation,
+        z: 0,
+    })
   }
 
   // ===================================================
@@ -139,10 +175,6 @@
     // Geometry
     const particlesGeometry = new THREE.BufferGeometry()
     particlesGeometry.setAttribute('position', imageToGeomAttributes(image))
-    // particlesGeometry.computeBoundingBox();
-    // particlesGeometry.computeBoundingSphere();
-    // particlesGeometry.attributes.aVisible.needsUpdate = true
-    // particlesGeometry.attributes.position.needsUpdate = true
 
     // Material
     const particlesMaterial = new THREE.RawShaderMaterial({
@@ -172,8 +204,6 @@
     const positions = new Float32Array(Math.ceil(w * h / 2) * 3)
     const minZ = settings.imageParticleMinZ
     const maxZ = settings.imageParticleMaxZ
-
-    console.log(positions)
 
     // Move particles along z axis
     // TODO: improve: right now half of positions items are particles that will never be shown
@@ -261,7 +291,7 @@
 </script>
 
 <template>
-  <h1>{{ sizes.width }} x {{ sizes.height }}</h1>
+  <h1>Index: {{ currentIndex }}</h1>
   <canvas ref="threeCanvas"></canvas>
 </template>
 
@@ -272,7 +302,7 @@
     top: 0;
     bottom: 0;
     right: 0;
-    /* z-index: 0; */
+    z-index: 0;
     width: 100vw;
     height: 100vh;
     object-fit: contain;
