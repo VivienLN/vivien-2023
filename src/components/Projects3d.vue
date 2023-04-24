@@ -28,10 +28,9 @@
     fov: 50,
     enableGui: true,
     enableOrbit: !false,
-    enableAxesHelper: false,
+    enableAxesHelper: !false,
     // Images
-    imageSize3d: 1.5,
-    imageSizePx: 200,
+    image3dToPxRatio: 1.5 / 200,
     imageParticleColor: 0xffeeaa,
     imageParticleSize: 10,
     imageParticleMinZ: -1.5,
@@ -138,10 +137,8 @@
   // ===================================================
   function imageToMesh(image) {
     // Geometry
-    const { positions, visible } = imageToGeomAttributes(image)
     const particlesGeometry = new THREE.BufferGeometry()
-    particlesGeometry.setAttribute('position', positions)
-    particlesGeometry.setAttribute('aVisible', visible)
+    particlesGeometry.setAttribute('position', imageToGeomAttributes(image))
     // particlesGeometry.computeBoundingBox();
     // particlesGeometry.computeBoundingSphere();
     // particlesGeometry.attributes.aVisible.needsUpdate = true
@@ -165,77 +162,61 @@
   }
 
   // ===================================================
-  // Calcaulte anamorphic particles geometry from an image,
-  // and get the following attributes:
-  // - positions
-  // - visible
+  // Calculate anamorphic particles geometry from an image,
+  // and get the positions attributes
   // ===================================================
   function imageToGeomAttributes(image) {
     const imgData = getImageData(image)
-    const imgSize = settings.imageSizePx
-    const count = imgSize * imgSize
-    const positions = new Float32Array(count * 3)
-    const visible = new Uint8Array(count) // Sad, no BitArray in JS :'(
+    const w = image.width
+    const h = image.height
+    const positions = new Float32Array(Math.ceil(w * h / 2) * 3)
     const minZ = settings.imageParticleMinZ
     const maxZ = settings.imageParticleMaxZ
-    const ratio = settings.imageSize3d / settings.imageSizePx
+
+    console.log(positions)
 
     // Move particles along z axis
     // TODO: improve: right now half of positions items are particles that will never be shown
-    for(var y = 0; y < imgSize; y++) {
-      for(var x = 0; x < imgSize; x++) {
+    var posIndex = 0
+    for(var y = 0; y < h; y++) {
+      for(var x = 0; x < w; x++) {
         if(x%2 !== y%2) {
           continue
         }
-        let i = imgSize * y + x
-        let posIndex = i * 3        // x, y, z in positions
+        let i = w * y + x
         let colorIndex = i * 4      // r, g, b, a in imgData
         let finalPosition = new THREE.Vector3()
 
-        // Discard 1px / 2 (for "frame print" effect, like a checkboard)
-        // And discard "out of bound" pixels (for images with w or h smaller than imgSize)
-        let isVisible = colorIndex < imgData.data.length
-        visible[i] = isVisible
-
         // Cast ray from particle position on the plane (z=0) to viewpoint
-        let projectedX = x * ratio - settings.imageSize3d / 2
-        let projectedY = -y * ratio + settings.imageSize3d / 2
+        let projectedX = (x - w / 2) * settings.image3dToPxRatio
+        let projectedY = -((y - h / 2) * settings.image3dToPxRatio)
         let projectedPosition = new THREE.Vector3(projectedX, projectedY, 0)
 
-        if(isVisible) {
-          // Get input image pixel value (luminosity)
-          let r = imgData.data[colorIndex] / 255
-          let g = imgData.data[colorIndex + 1] / 255
-          let b = imgData.data[colorIndex + 2] / 255
-          let a = imgData.data[colorIndex + 3]  / 255
-          let value = (r + g + b) / 3 * a
+        // Get input image pixel value (luminosity)
+        let r = imgData.data[colorIndex] / 255
+        let g = imgData.data[colorIndex + 1] / 255
+        let b = imgData.data[colorIndex + 2] / 255
+        let a = imgData.data[colorIndex + 3]  / 255
+        let value = (r + g + b) / 3 * a
 
-          // Stolen from raycaster.setFromCamera()
-          let rayDirection = settings.viewpoint.clone().sub(projectedPosition).normalize()
-          let ray = new THREE.Ray(projectedPosition, rayDirection)
+        // Stolen from raycaster.setFromCamera()
+        let rayDirection = settings.viewpoint.clone().sub(projectedPosition).normalize()
+        let ray = new THREE.Ray(projectedPosition, rayDirection)
 
-          // Get point position along the ray
-          ray.at(minZ + value * (maxZ - minZ), finalPosition)
-
-        } else {
-          // Just use position on the z=0 plane because they will be hidden anyway
-          // And we dont care about original image pixel color because z will be 0
-          finalPosition.x = projectedX
-          finalPosition.y = projectedY
-          finalPosition.z = 0
-        }
+        // Get point position along the ray
+        ray.at(minZ + value * (maxZ - minZ), finalPosition)
         
         // Fill the positions array
         positions[posIndex    ] = finalPosition.x
         positions[posIndex + 1] = finalPosition.y
         positions[posIndex + 2] = finalPosition.z
+
+        // increment posIndex
+        posIndex += 3
       }
     }
 
-    return {
-      positions: new THREE.BufferAttribute(positions, 3),
-      visible: new THREE.BufferAttribute(visible, 1)
-    }
+    return new THREE.BufferAttribute(positions, 3)
   }
 
   // ===================================================
