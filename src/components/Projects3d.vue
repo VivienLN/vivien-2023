@@ -2,6 +2,7 @@
   // VueJS imports
   import { onMounted, onBeforeUpdate, ref } from 'vue'
   import { useResize } from '../composables/resize.js'
+  import { useMousePosition } from '../composables/mouseposition.js'
 
   // ThreeJS imports
   import * as THREE from 'three'
@@ -38,17 +39,20 @@
   // Scene settings with defaults
   const settings = {
     viewpoint: new THREE.Vector3(0, 0, 2),
+    parallaxMaxRotation: .04,
+    rotationY: -.3,
+    rotationZ: 0,
     fov: 70,
     enableGui: false,
     enableOrbit: false,
     enableAxesHelper: false,
     // Images
-    image3dToPxRatio: 3 / 200,
+    image3dToPxRatio: .012,
     imageParticleColor: 0xffeeaa,
     imageParticleSize: 10,
     imageParticleMinZ: 0,
     imageParticleMaxZ: 1.5,
-    imageRotationOffset: .6, // Max 10 projects
+    imageRotationOffset: .8, // Max 8 projects
     imageRotationRadius: 4,
     // Animations
     navTransitionDuration: 2,
@@ -62,6 +66,7 @@
 
   // Navigation
   const scrollPosition = ref(0)
+  const mousePosition = useMousePosition()
 
   // Usefull threeJS objects
   const tjs = {
@@ -72,6 +77,8 @@
     orbitControls: null,
     axesHelper: null,
     gui: null,
+    // Camera rotation (offset is added from mouse position in refresh())
+    cameraBaseRotation: new THREE.Vector3(),
   }
   const sizes = useResize(threeCanvas, (w, h) => {
     tjs.camera.aspect = w / h
@@ -79,6 +86,7 @@
     tjs.renderer.setSize(w, h, false)
     tjs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   })
+
 
   // Vue callbacks
   onMounted(load)
@@ -174,7 +182,7 @@
         trigger: props.scrollTriggerElement,
         start: "top top",
         end: "bottom bottom",
-        scrub: .6,
+        scrub: .2,
         // onUpdate: self => scrollPosition.value = self.progress,
       }
     })
@@ -192,7 +200,7 @@
         z: z
       })
       // Rotation
-      timeline.to(tjs.camera.rotation, {
+      timeline.to(tjs.cameraBaseRotation, {
         ease: settings.navTransitionEase,
         x: project.cameraTargetRotation,
         y: 0,
@@ -327,6 +335,15 @@
   function refresh() {
     let t = tjs.clock.getElapsedTime()
 
+    // Camera (calculate from base and offset)
+    // console.log(mousePosition.x - window.innerWidth / 2)
+    let offsetX = -(mousePosition.y.value / window.innerHeight - .5) * settings.parallaxMaxRotation
+    let offsetY = -(mousePosition.x.value / window.innerWidth - .5) * settings.parallaxMaxRotation
+    // console.log(settings.parallaxMaxOffset)
+    tjs.camera.rotation.x = tjs.cameraBaseRotation.x + offsetX
+    tjs.camera.rotation.y = tjs.cameraBaseRotation.y + offsetY + settings.rotationY
+    tjs.camera.rotation.z = tjs.cameraBaseRotation.z + settings.rotationZ
+
     // Update controls
     if(settings.enableOrbit) {
         tjs.orbitControls.update()
@@ -348,7 +365,7 @@
 </script>
 
 <template>
-  <h1>Position: {{ scrollPosition }}</h1>
+  <h1>Position: {{ mousePosition.x }} : {{ mousePosition.y }}</h1>
   <canvas ref="threeCanvas"></canvas>
 </template>
 
