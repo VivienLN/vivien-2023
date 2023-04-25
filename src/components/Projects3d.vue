@@ -48,8 +48,8 @@
     imageParticleSize: 10,
     imageParticleMinZ: 0,
     imageParticleMaxZ: 1.5,
-    imageMargin: 3,
-    imageRotationOffset: .5,
+    imageRotationOffset: .6, // Max 10 projects
+    imageRotationRadius: 4,
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
@@ -131,14 +131,20 @@
     props.projects.forEach((project, i) => {
       // Create object
       project.mesh = imageToMesh(project.imageObject)
-      project.mesh.position.y = -i * settings.imageMargin
-      project.mesh.rotation.y = i * settings.imageRotationOffset
+      // project.mesh.position.y = -i * settings.imageMargin
+      // project.mesh.rotation.y = i * settings.imageRotationOffset
+      
+      let angle = i * -settings.imageRotationOffset
+      project.mesh.rotation.x = angle
+      project.mesh.position.y = Math.sin(angle) * settings.imageRotationRadius
+      project.mesh.position.z = (-Math.cos(angle) + 1) * settings.imageRotationRadius
+
       tjs.scene.add(project.mesh)
 
       // Camera target for this project
       let cameraTargetPosition = project.mesh.localToWorld(settings.viewpoint.clone())
       project.cameraTargetPosition = cameraTargetPosition
-      project.cameraTargetRotation = project.mesh.rotation.y
+      project.cameraTargetRotation = angle
     })
 
     // Debug GUI
@@ -188,8 +194,8 @@
       // Rotation
       timeline.to(tjs.camera.rotation, {
         ease: settings.navTransitionEase,
-        x: 0,
-        y: project.cameraTargetRotation,
+        x: project.cameraTargetRotation,
+        y: 0,
         z: 0,
       }, "<")
     })

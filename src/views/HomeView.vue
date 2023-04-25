@@ -75,6 +75,7 @@
   .projects {
     position: relative;
     z-index: 10;
+    pointer-events: none;
   }
   section.project {
     height: 100vh;
@@ -83,7 +84,6 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    pointer-events: none;
   }
   .title {
     font-size: 6rem;
