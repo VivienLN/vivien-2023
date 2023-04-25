@@ -3,12 +3,14 @@
   import Projects3d from '@/components/Projects3d.vue'
   import projects from '@/data/projects.json'
 
+  // ===================================================
+  // Here override threeJS parameters
+  // ===================================================
   const sceneSettings = {
     enableGui: true,
     enableOrbit: false,
     enableAxesHelper: !false,    
   }
-
 
   // ===================================================
   // Navigation functions
@@ -38,13 +40,30 @@
 
 <template>
   <main>
-    <button @click="previous">Précédent</button>
-    <button @click="next">Suivant</button>
+    <div>
+      <button @click="previous">Précédent</button>
+      <button @click="next">Suivant</button>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+    </div>
     <Projects3d 
       :currentIndex="currentIndex"
       :projects="projects"
       :settings="sceneSettings"
+      scrollTriggerElement=".projects"
     />
+    <div class="projects">
+      <section class="project" v-for="(project, index) in projects" :key="index">
+        <div>
+          <h2 class="title">{{ project.title }}</h2>
+          <p class="subtitle">{{ project.subtitle }}</p>
+        </div>
+      </section>
+    </div>
   </main>
 </template>
 
@@ -52,5 +71,25 @@
   button {
     position: relative;
     z-index: 10;
+  }
+  .projects {
+    position: relative;
+    z-index: 10;
+  }
+  section.project {
+    height: 100vh;
+    text-align: center;
+    /* border: 2px solid red; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .title {
+    font-size: 6rem;
+  }
+  .subtitle {
+    text-transform: uppercase;
+    font-weight: bold;
   }
 </style>

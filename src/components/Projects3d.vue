@@ -9,7 +9,11 @@
   import * as dat from 'lil-gui'
   import pictureVertexShader from '../shaders/picture-particles/vertex.glsl'
   import pictureFragmentShader from '../shaders/picture-particles/fragment.glsl'
+  
+  // GSAP imports
   import gsap from "gsap"
+  import { ScrollTrigger } from "gsap/ScrollTrigger"
+  gsap.registerPlugin(ScrollTrigger)
 
   // Props
   const props = defineProps({
@@ -23,6 +27,10 @@
     },
     currentIndex: {
       type: Number,
+      required: true
+    },
+    scrollTriggerElement: {
+      type:String,
       required: true
     }
   })
@@ -40,17 +48,20 @@
     imageParticleSize: 10,
     imageParticleMinZ: 0,
     imageParticleMaxZ: 1.5,
-    imageMargin: 2,
-    imageRotationOffset: .8,
+    imageMargin: 3,
+    imageRotationOffset: .5,
     // Animations
     navTransitionDuration: 2,
-    navTransitionEase: "power4.inOut",
+    navTransitionEase: "power1.inOut",
     // Override settings with props
     ...props.settings
   }
 
   // Ref for canvas
   const threeCanvas = ref(null)
+
+  // Navigation
+  const scrollPosition = ref(0)
 
   // Usefull threeJS objects
   const tjs = {
@@ -73,7 +84,6 @@
   onMounted(load)
   onBeforeUpdate(update)
 
-  
   // ===================================================
   // Load assets (called onMounted())
   // ===================================================
@@ -121,7 +131,7 @@
     props.projects.forEach((project, i) => {
       // Create object
       project.mesh = imageToMesh(project.imageObject)
-      project.mesh.position.y = -i * (project.imageObject.height * settings.image3dToPxRatio + settings.imageMargin)
+      project.mesh.position.y = -i * settings.imageMargin
       project.mesh.rotation.y = i * settings.imageRotationOffset
       tjs.scene.add(project.mesh)
 
@@ -136,6 +146,9 @@
       setupGui()
     }
 
+    // Scroll
+    initScrollTrigger()
+
     // Fire resize event
     window.dispatchEvent(new Event('resize'))
 
@@ -145,11 +158,49 @@
     // Fire first update of scene (according to index)
     update()
   }
+  
+  // ===================================================
+  // Scroll animation with GSAP and scrolltrigger
+  // ===================================================
+  async function initScrollTrigger() {
+    const timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: props.scrollTriggerElement,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: .6,
+        // onUpdate: self => scrollPosition.value = self.progress,
+      }
+    })
+
+    // Set timeline stops at each project viewpoint
+    props.projects.forEach((project, i) => {
+      // Skip first
+      if(i == 0) return
+      let {x, y, z} = project.cameraTargetPosition
+      // Position
+      timeline.to(tjs.camera.position, {
+        ease: settings.navTransitionEase,
+        x: x,
+        y: y,
+        z: z
+      })
+      // Rotation
+      timeline.to(tjs.camera.rotation, {
+        ease: settings.navTransitionEase,
+        x: 0,
+        y: project.cameraTargetRotation,
+        z: 0,
+      }, "<")
+    })
+  }
 
   // ===================================================
   // Update the scene according to current index
   // ===================================================
   function update() {
+    // TODO: Remove update() if we only use scroll
+    return
     let project = props.projects[props.currentIndex]
     let {x, y, z} = project.cameraTargetPosition
     gsap.to(tjs.camera.position, {
@@ -291,7 +342,7 @@
 </script>
 
 <template>
-  <h1>Index: {{ currentIndex }}</h1>
+  <h1>Position: {{ scrollPosition }}</h1>
   <canvas ref="threeCanvas"></canvas>
 </template>
 
@@ -307,4 +358,5 @@
     height: 100vh;
     object-fit: contain;
   }
+  h1 { position: fixed; }
 </style>

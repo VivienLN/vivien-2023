@@ -1,17 +1,32 @@
 [
   {
-    "name": "Adidas x Decathlon",
-    "image": "adidas2.png",
-    "subtitle": "Store pages"
+    "title": "Adidas x Decathlon",
+    "subtitle": "Store pages",
+    "image": "adidas2.png"
   },
   {
-    "name": "The Sinking City",
-    "image": "sinking.png",
-    "subtitle": "Official website"
+    "title": "The Sinking City",
+    "subtitle": "Official website",
+    "image": "sinking.png"
   },
   {
-    "name": "Ni No Kuni 2",
-    "image": "nnk2.png",
-    "subtitle": "Official website"
+    "title": "Ni No Kuni 2",
+    "subtitle": "Official website",
+    "image": "nnk2.png"
+  },
+  {
+    "title": "Adidas x Decathlon",
+    "subtitle": "Store pages",
+    "image": "adidas2.png"
+  },
+  {
+    "title": "The Sinking City",
+    "subtitle": "Official website",
+    "image": "sinking.png"
+  },
+  {
+    "title": "Ni No Kuni 2",
+    "subtitle": "Official website",
+    "image": "nnk2.png"
   }
 ]
