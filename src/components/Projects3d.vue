@@ -40,23 +40,27 @@
 
   // Scene settings with defaults
   const settings = {
+    // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
-    parallaxMaxRotation: .04,
-    parallaxMaxTranslation: .04,
     rotationY: -.3,
     rotationZ: 0,
     fov: 70,
+    // Camera parallax
+    parallaxOffset: .05,
+    parallaxDuration: 1,
+    parallaxEase: "power2.out",
+    // Debug
     enableGui: false,
     enableOrbit: false,
     enableAxesHelper: false,
     // Images
-    image3dToPxRatio: .01,
+    image3dToPxRatio: .008,
     imageParticleColor: 0xffeeaa,
-    imageParticleSize: 10,
-    imageParticleMinZ: 0,
-    imageParticleMaxZ: 1.5,
+    imageParticleSize: 12,
+    imageParticleMinZ: -1.2,
+    imageParticleMaxZ: 1.2,
     imageRotationOffset: .4, // Max 8 projects
-    imageRotationRadius: 4.5,
+    imageRotationRadius: 4.8,
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
@@ -69,20 +73,20 @@
 
   // Navigation
   const scrollPosition = ref(0)
-  const mousePosition = useMousePosition()
+  const mousePosition = useMousePosition(handleParallax)
 
   // Usefull threeJS objects
   const tjs = {
+    isReady: false,
     clock: new THREE.Clock(),
     scene: null,
     renderer: null,
     camera: null,
+    // To separate position and parallax effect
+    cameraGroup: null, 
     orbitControls: null,
     axesHelper: null,
     gui: null,
-    // Camera position/rotation (offset can be added from mouse position in refresh())
-    cameraBaseRotation: new THREE.Vector3(),
-    cameraBasePosition: new THREE.Vector3(),
   }
   const sizes = useResize(threeCanvas, (w, h) => {
     tjs.camera.aspect = w / h
@@ -125,10 +129,14 @@
     })
 
     // Camera
+    // cameraGroup handles the position in the world
+    // camera itself moves inside to handle parallax effect
+    tjs.cameraGroup = new THREE.Group()
+    tjs.cameraGroup.position.copy(settings.viewpoint)
+
     tjs.camera = new THREE.PerspectiveCamera(settings.fov)
-    tjs.camera.position.copy(settings.viewpoint)
-    tjs.camera.rotation.z = - Math.PI * 2 / 24
-    tjs.scene.add(tjs.camera)
+    tjs.cameraGroup.add(tjs.camera)
+    tjs.scene.add(tjs.cameraGroup)
 
     // Orbit Controls
     tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
@@ -142,15 +150,12 @@
     // For each image, construct a geometry and a mesh
     props.projects.forEach((project, i) => {
       // Create object
-      project.mesh = imageToMesh(project.imageObject)
-      // project.mesh.position.y = -i * settings.imageMargin
-      // project.mesh.rotation.y = i * settings.imageRotationOffset
-      
       let angle = i * -settings.imageRotationOffset
-      project.mesh.rotation.x = angle
-      project.mesh.position.y = Math.sin(angle) * settings.imageRotationRadius
-      project.mesh.position.z = (-Math.cos(angle) + 1) * settings.imageRotationRadius
-
+      let mesh = imageToMesh(project.imageObject)      
+      mesh.rotation.x = angle
+      mesh.position.y = Math.sin(angle) * settings.imageRotationRadius
+      mesh.position.z = (-Math.cos(angle) + 1) * settings.imageRotationRadius
+      project.mesh = mesh
       tjs.scene.add(project.mesh)
 
       // Camera target for this project
@@ -163,6 +168,9 @@
     if(settings.enableGui) {
       setupGui()
     }
+
+    // Flag as ready
+    tjs.isReady = true
 
     // Scroll
     initScrollTrigger()
@@ -189,28 +197,30 @@
         scrub: .8,
       }
     })
-    // Set timeline stops at each project viewpoint
     props.projects.forEach((project, i) => {
       let {x, y, z} = project.cameraTargetPosition
       if(i == 0) {
+        console.log(project.cameraTargetPosition, tjs.cameraGroup.position.x)
         // Set starting position on first project
-        tjs.cameraBasePosition = new THREE.Vector3(x, y, z)
-        tjs.cameraBaseRotation = new THREE.Vector3(project.cameraTargetRotation, 0, 0)
+        tjs.cameraGroup.position.x = x
+        tjs.cameraGroup.position.y = y
+        tjs.cameraGroup.position.z = z
+        tjs.cameraGroup.rotation.x = project.cameraTargetRotation
+        tjs.cameraGroup.rotation.y = settings.rotationY
+        tjs.cameraGroup.rotation.z = settings.rotationZ
       } else {
         // Set timeline stops
         // Position
-        timeline.to(tjs.cameraBasePosition, {
+        timeline.to(tjs.cameraGroup.position, {
           ease: settings.navTransitionEase,
           x: x,
           y: y,
           z: z
         })
         // Rotation
-        timeline.to(tjs.cameraBaseRotation, {
+        timeline.to(tjs.cameraGroup.rotation, {
           ease: settings.navTransitionEase,
-          x: project.cameraTargetRotation,
-          y: 0,
-          z: 0,
+          x: project.cameraTargetRotation
         }, "<")
       }
       if(i == 0) return
@@ -238,6 +248,33 @@
         x: 0,
         y: project.cameraTargetRotation,
         z: 0,
+    })
+  }
+
+  // ===================================================
+  // Animate camera inside cameraGroup 
+  // according to mouse position
+  // ===================================================
+  function handleParallax(x, y, event) {
+    if(!tjs.isReady) {
+      return
+    }
+    let offsetX = (x / window.innerWidth - .5)
+    let offsetY = -(y / window.innerHeight - .5)
+
+    gsap.killTweensOf(tjs.camera.position)
+    gsap.killTweensOf(tjs.camera.rotation)
+    gsap.to(tjs.camera.position, {
+        duration: settings.parallaxDuration,
+        ease: settings.parallaxEase,
+        x: offsetX * settings.parallaxOffset / 2,
+        y: offsetY * settings.parallaxOffset / 2,
+    })
+    gsap.to(tjs.camera.rotation, {
+        duration: settings.parallaxDuration,
+        ease: settings.parallaxEase,
+        x: -offsetY * settings.parallaxOffset,
+        y: offsetX * settings.parallaxOffset,
     })
   }
 
@@ -343,18 +380,6 @@
   function refresh() {
     let t = tjs.clock.getElapsedTime()
 
-    // Camera (calculate from base and offset)
-    // console.log(mousePosition.x - window.innerWidth / 2)
-    let offsetX = -(mousePosition.y.value / window.innerHeight - .5) * settings.parallaxMaxRotation
-    let offsetY = -(mousePosition.x.value / window.innerWidth - .5) * settings.parallaxMaxRotation
-    // console.log(settings.parallaxMaxOffset)
-    tjs.camera.rotation.x = tjs.cameraBaseRotation.x + offsetX
-    tjs.camera.rotation.y = tjs.cameraBaseRotation.y + offsetY + settings.rotationY
-    tjs.camera.rotation.z = tjs.cameraBaseRotation.z + settings.rotationZ
-    tjs.camera.position.x = tjs.cameraBasePosition.x
-    tjs.camera.position.y = tjs.cameraBasePosition.y
-    tjs.camera.position.z = tjs.cameraBasePosition.z
-
     // Update controls
     if(settings.enableOrbit) {
         tjs.orbitControls.update()
@@ -370,13 +395,15 @@
     window.requestAnimationFrame(refresh)
   }
 
+  // ===================================================
+  // Setup dat.gui
+  // ===================================================
   function setupGui() {
     tjs.gui = new dat.GUI()
   }
 </script>
 
 <template>
-  <h1>Position: {{ mousePosition.x }} : {{ mousePosition.y }}</h1>
   <canvas ref="threeCanvas"></canvas>
 </template>
 

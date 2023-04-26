@@ -9,7 +9,7 @@
   const sceneSettings = {
     enableGui: true,
     enableOrbit: false,
-    enableAxesHelper: !false,    
+    enableAxesHelper: false,    
   }
 
   // ===================================================
@@ -78,7 +78,8 @@
     pointer-events: none;
   }
   section.project {
-    height: 80vh;
+    height: 100vh;
+    padding-left: 33vw;
     text-align: center;
     /* border: 2px solid red; */
     display: flex;
