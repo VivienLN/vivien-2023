@@ -78,7 +78,7 @@
     pointer-events: none;
   }
   section.project {
-    height: 100vh;
+    height: 80vh;
     text-align: center;
     /* border: 2px solid red; */
     display: flex;

@@ -15,6 +15,8 @@
   import gsap from "gsap"
   import { ScrollTrigger } from "gsap/ScrollTrigger"
   gsap.registerPlugin(ScrollTrigger)
+  import { CustomEase } from "gsap/CustomEase"
+  gsap.registerPlugin(CustomEase)
 
   // Props
   const props = defineProps({
@@ -40,6 +42,7 @@
   const settings = {
     viewpoint: new THREE.Vector3(0, 0, 2),
     parallaxMaxRotation: .04,
+    parallaxMaxTranslation: .04,
     rotationY: -.3,
     rotationZ: 0,
     fov: 70,
@@ -47,13 +50,13 @@
     enableOrbit: false,
     enableAxesHelper: false,
     // Images
-    image3dToPxRatio: .012,
+    image3dToPxRatio: .01,
     imageParticleColor: 0xffeeaa,
     imageParticleSize: 10,
     imageParticleMinZ: 0,
     imageParticleMaxZ: 1.5,
-    imageRotationOffset: .8, // Max 8 projects
-    imageRotationRadius: 4,
+    imageRotationOffset: .4, // Max 8 projects
+    imageRotationRadius: 4.5,
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
@@ -77,8 +80,9 @@
     orbitControls: null,
     axesHelper: null,
     gui: null,
-    // Camera rotation (offset is added from mouse position in refresh())
+    // Camera position/rotation (offset can be added from mouse position in refresh())
     cameraBaseRotation: new THREE.Vector3(),
+    cameraBasePosition: new THREE.Vector3(),
   }
   const sizes = useResize(threeCanvas, (w, h) => {
     tjs.camera.aspect = w / h
@@ -182,30 +186,34 @@
         trigger: props.scrollTriggerElement,
         start: "top top",
         end: "bottom bottom",
-        scrub: .2,
-        // onUpdate: self => scrollPosition.value = self.progress,
+        scrub: .8,
       }
     })
-
     // Set timeline stops at each project viewpoint
     props.projects.forEach((project, i) => {
-      // Skip first
-      if(i == 0) return
       let {x, y, z} = project.cameraTargetPosition
-      // Position
-      timeline.to(tjs.camera.position, {
-        ease: settings.navTransitionEase,
-        x: x,
-        y: y,
-        z: z
-      })
-      // Rotation
-      timeline.to(tjs.cameraBaseRotation, {
-        ease: settings.navTransitionEase,
-        x: project.cameraTargetRotation,
-        y: 0,
-        z: 0,
-      }, "<")
+      if(i == 0) {
+        // Set starting position on first project
+        tjs.cameraBasePosition = new THREE.Vector3(x, y, z)
+        tjs.cameraBaseRotation = new THREE.Vector3(project.cameraTargetRotation, 0, 0)
+      } else {
+        // Set timeline stops
+        // Position
+        timeline.to(tjs.cameraBasePosition, {
+          ease: settings.navTransitionEase,
+          x: x,
+          y: y,
+          z: z
+        })
+        // Rotation
+        timeline.to(tjs.cameraBaseRotation, {
+          ease: settings.navTransitionEase,
+          x: project.cameraTargetRotation,
+          y: 0,
+          z: 0,
+        }, "<")
+      }
+      if(i == 0) return
     })
   }
 
@@ -343,6 +351,9 @@
     tjs.camera.rotation.x = tjs.cameraBaseRotation.x + offsetX
     tjs.camera.rotation.y = tjs.cameraBaseRotation.y + offsetY + settings.rotationY
     tjs.camera.rotation.z = tjs.cameraBaseRotation.z + settings.rotationZ
+    tjs.camera.position.x = tjs.cameraBasePosition.x
+    tjs.camera.position.y = tjs.cameraBasePosition.y
+    tjs.camera.position.z = tjs.cameraBasePosition.z
 
     // Update controls
     if(settings.enableOrbit) {
