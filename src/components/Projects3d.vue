@@ -45,7 +45,9 @@
 
   // Scene settings with defaults
   const settings = {
-    background: 0xe58d76,
+    background: 0xd77c64,
+    fogMin: 2,
+    fogMax: .16,
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
     rotationY: .2,
@@ -62,7 +64,7 @@
     // Images
     image3dToPxRatio: .012,
     imageParticleColor: 0x7b5698, //0xf85d4c,
-    imageParticleSize: 18, // Depends on screen size
+    imageParticleSize: 17, // Depends on screen size
     imageParticleMinZ: -2,
     imageParticleMaxZ: 1.5,
     imageRotationOffset: .5,
@@ -318,14 +320,19 @@
 
     // Material
     const particlesMaterial = new THREE.RawShaderMaterial({
-        depthWrite: false,
+        // alphaTest: 0.001,
+        // depthWrite: false,
+        // depthTest: false,
         vertexColors: true,
         transparent: true,
         vertexShader: pictureVertexShader,
         fragmentShader: pictureFragmentShader,
         uniforms: {
             uSize: { value: 0 },
-            uColor: { value: new THREE.Color(settings.imageParticleColor) }
+            uColor: { value: new THREE.Color(settings.imageParticleColor) },
+            uFogColor: { value: new THREE.Color(settings.background) },
+            uFogMax: { value: settings.fogMax },
+            uFogMin: { value: settings.fogMin },
         }
     })
 
