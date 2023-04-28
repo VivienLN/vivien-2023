@@ -7,6 +7,11 @@
   // ThreeJS imports
   import * as THREE from 'three'
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+  import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+  import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+  import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
+  import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js'
+  import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
   import * as dat from 'lil-gui'
   import pictureVertexShader from '../shaders/picture-particles/vertex.glsl'
   import pictureFragmentShader from '../shaders/picture-particles/fragment.glsl'
@@ -40,10 +45,11 @@
 
   // Scene settings with defaults
   const settings = {
+    background: 0xe58d76,
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
     rotationY: .2,
-    rotationZ: -.03,
+    rotationZ: -.1,
     fov: 70,
     // Camera parallax
     parallaxOffset: .1,
@@ -56,9 +62,9 @@
     // Images
     image3dToPxRatio: .012,
     imageParticleColor: 0x7b5698, //0xf85d4c,
-    imageParticleSize: 26, // Depends on screen size
+    imageParticleSize: 18, // Depends on screen size
     imageParticleMinZ: -2,
-    imageParticleMaxZ: 1.2,
+    imageParticleMaxZ: 1.5,
     imageRotationOffset: .5,
     imageRotationRadius: 5.2,
     // Animations
@@ -81,6 +87,7 @@
     clock: new THREE.Clock(),
     scene: null,
     renderer: null,
+    effectComposer: null,
     camera: null,
     // To separate position and parallax effect
     cameraGroup: null, 
@@ -93,6 +100,8 @@
     tjs.camera.updateProjectionMatrix()
     tjs.renderer.setSize(w, h, false)
     tjs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    tjs.effectComposer.setSize(w, h)
+    tjs.effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     // Update particle size
     props.projects.forEach(project => {
       // Since THREEJS resize when height changes, let's use height as reference
@@ -129,10 +138,13 @@
     // ThreeJS setup
     const canvas = threeCanvas.value
     tjs.scene = new THREE.Scene()
+    tjs.scene.background = new THREE.Color(settings.background)
+
+    // Renderer
     tjs.renderer = new THREE.WebGLRenderer({
         alpha: true,
         canvas: canvas,
-        antialias: true
+        antialias: true,
     })
 
     // Camera
@@ -144,6 +156,14 @@
     tjs.camera = new THREE.PerspectiveCamera(settings.fov)
     tjs.cameraGroup.add(tjs.camera)
     tjs.scene.add(tjs.cameraGroup)
+
+    // Effect Composer
+    tjs.effectComposer = new EffectComposer(tjs.renderer)
+    const renderPass = new RenderPass(tjs.scene, tjs.camera)
+    tjs.effectComposer.addPass(renderPass)
+    // tjs.effectComposer.addPass(new SMAAPass(1920, 1080))
+    // tjs.effectComposer.addPass(new BloomPass(1, 25, .4))
+    tjs.effectComposer.addPass(new FilmPass(.4, .07, 1000, 0))
 
     // Orbit Controls
     tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
@@ -196,6 +216,9 @@
   // Scroll animation with GSAP and scrolltrigger
   // ===================================================
   async function initScrollTrigger() {
+    if(settings.enableOrbit) {
+      return
+    }
     const timeline = gsap.timeline({
       scrollTrigger: {
         trigger: props.scrollTriggerElement,
@@ -263,7 +286,7 @@
   // according to mouse position
   // ===================================================
   function handleParallax(x, y, event) {
-    if(!tjs.isReady) {
+    if(!tjs.isReady || settings.enableOrbit) {
       return
     }
     let offsetX = (x / window.innerWidth - .5)
@@ -396,7 +419,8 @@
     tjs.axesHelper.visible = settings.enableAxesHelper
 
     // Render
-    tjs.renderer.render(tjs.scene, tjs.camera)
+    // tjs.renderer.render(tjs.scene, tjs.camera)
+    tjs.effectComposer.render()
 
     // Call tick again on the next frame
     window.requestAnimationFrame(refresh)
