@@ -3,13 +3,12 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  position: relative;
-  font-weight: normal;
+  padding: 0;
 }
 
 body {
   min-height: 100vh;
-  color: #fff;
-  background: #e58d76; /* #e58d76; */
+  color: #ffffdd;
+  background: #e5685d; /* #e58d76; */
   font-family: sans-serif;
 }

@@ -50,8 +50,8 @@
     fogMax: .16,
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
-    rotationY: .2,
-    rotationZ: -.1,
+    rotationY: .22,
+    rotationZ: -.12,
     fov: 70,
     // Camera parallax
     parallaxOffset: .1,

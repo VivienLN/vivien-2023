@@ -85,7 +85,7 @@
     flex-direction: column;
     justify-content: center;
     text-align: left;
-    /* font-weight: bold; */
+    font-weight: bold;
   }
   .title {
     font-size: 7rem;
