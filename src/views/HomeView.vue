@@ -79,18 +79,19 @@
   }
   section.project {
     height: 100vh;
-    padding-left: 33vw;
+    padding: 0 10vw;
     text-align: center;
-    /* border: 2px solid red; */
     display: flex;
     flex-direction: column;
     justify-content: center;
+    text-align: left;
+    /* font-weight: bold; */
   }
   .title {
-    font-size: 6rem;
+    font-size: 7rem;
+    text-transform: uppercase;
   }
   .subtitle {
     text-transform: uppercase;
-    font-weight: bold;
   }
 </style>

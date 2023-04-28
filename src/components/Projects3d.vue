@@ -42,25 +42,25 @@
   const settings = {
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
-    rotationY: -.3,
-    rotationZ: 0,
+    rotationY: .2,
+    rotationZ: -.03,
     fov: 70,
     // Camera parallax
-    parallaxOffset: .05,
-    parallaxDuration: 1,
+    parallaxOffset: .1,
+    parallaxDuration: .6,
     parallaxEase: "power2.out",
     // Debug
     enableGui: false,
     enableOrbit: false,
     enableAxesHelper: false,
     // Images
-    image3dToPxRatio: .008,
-    imageParticleColor: 0xffeeaa,
-    imageParticleSize: 12,
-    imageParticleMinZ: -1.2,
+    image3dToPxRatio: .012,
+    imageParticleColor: 0x7b5698, //0xf85d4c,
+    imageParticleSize: 26, // Depends on screen size
+    imageParticleMinZ: -2,
     imageParticleMaxZ: 1.2,
-    imageRotationOffset: .4, // Max 8 projects
-    imageRotationRadius: 4.8,
+    imageRotationOffset: .5,
+    imageRotationRadius: 5.2,
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
@@ -93,6 +93,12 @@
     tjs.camera.updateProjectionMatrix()
     tjs.renderer.setSize(w, h, false)
     tjs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    // Update particle size
+    props.projects.forEach(project => {
+      // Since THREEJS resize when height changes, let's use height as reference
+      let size = h / 1440 * settings.imageParticleSize
+      project.mesh.material.uniforms.uSize.value = size
+    })
   })
 
 
@@ -125,7 +131,8 @@
     tjs.scene = new THREE.Scene()
     tjs.renderer = new THREE.WebGLRenderer({
         alpha: true,
-        canvas: canvas
+        canvas: canvas,
+        antialias: true
     })
 
     // Camera
@@ -294,7 +301,7 @@
         vertexShader: pictureVertexShader,
         fragmentShader: pictureFragmentShader,
         uniforms: {
-            uSize: { value: settings.imageParticleSize },
+            uSize: { value: 0 },
             uColor: { value: new THREE.Color(settings.imageParticleColor) }
         }
     })
@@ -337,7 +344,7 @@
         let g = imgData.data[colorIndex + 1] / 255
         let b = imgData.data[colorIndex + 2] / 255
         let a = imgData.data[colorIndex + 3]  / 255
-        let value = (r + g + b) / 3 * a
+        let value = 1 - (r + g + b) / 3 * a
 
         // Stolen from raycaster.setFromCamera()
         let rayDirection = settings.viewpoint.clone().sub(projectedPosition).normalize()
