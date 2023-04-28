@@ -165,7 +165,7 @@
     tjs.effectComposer.addPass(renderPass)
     // tjs.effectComposer.addPass(new SMAAPass(1920, 1080))
     // tjs.effectComposer.addPass(new BloomPass(1, 25, .4))
-    tjs.effectComposer.addPass(new FilmPass(.4, .07, 1000, 0))
+    tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
 
     // Orbit Controls
     tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
