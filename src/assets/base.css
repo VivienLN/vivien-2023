@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "Allenoire";
+  src: local("Allenoire"), url("src/assets/fonts/allenoire.otf") format("opentype");
+}
+
+
 *,
 *::before,
 *::after {

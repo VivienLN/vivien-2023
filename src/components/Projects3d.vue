@@ -53,13 +53,14 @@
     fogMax: .16,
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
-    rotationY: .22,
-    rotationZ: -.12,
+    rotationY: .28,
+    rotationZ: -.08,
     fov: 70,
     // Camera parallax
     parallaxOffset: .05,
     parallaxDuration: .6,
     parallaxEase: "power2.out",
+    maxRgbShift: .008,
     // Debug
     enableGui: false,
     enableOrbit: false,
@@ -167,10 +168,11 @@
     tjs.effectComposer = new EffectComposer(tjs.renderer)
     
     tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
+    tjs.rgbShiftPass.material.uniforms.amount.value = settings.maxRgbShift
     
     tjs.effectComposer.addPass(new RenderPass(tjs.scene, tjs.camera))
     tjs.effectComposer.addPass(tjs.rgbShiftPass)
-    tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
+    // tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
     
     // Orbit Controls
     tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
@@ -249,6 +251,7 @@
         // Set timeline stops
         // Position
         timeline.to(tjs.cameraGroup.position, {
+          duration: 1,
           ease: settings.navTransitionEase,
           x: x,
           y: y,
@@ -256,6 +259,7 @@
         })
         // Rotation
         timeline.to(tjs.cameraGroup.rotation, {
+          duration: .6,
           ease: settings.navTransitionEase,
           x: project.cameraTargetRotation
         }, "<")
@@ -318,7 +322,11 @@
 
     // Update RGB shift
     let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)
-    tjs.rgbShiftPass.material.uniforms.amount.value = (Math.random() * .4 + .6) * distanceToCenter * .006
+    
+    gsap.to(tjs.rgbShiftPass.material.uniforms.amount, {
+        value: (Math.random() * .4 + .6) * distanceToCenter * settings.maxRgbShift,
+        ease: settings.parallaxEase,
+    })
   }
 
   // ===================================================
