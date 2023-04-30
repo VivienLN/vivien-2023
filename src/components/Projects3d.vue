@@ -12,6 +12,9 @@
   import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
   import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js'
   import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
+  import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
+  import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader.js'
+  import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js'
   import * as dat from 'lil-gui'
   import pictureVertexShader from '../shaders/picture-particles/vertex.glsl'
   import pictureFragmentShader from '../shaders/picture-particles/fragment.glsl'
@@ -54,7 +57,7 @@
     rotationZ: -.12,
     fov: 70,
     // Camera parallax
-    parallaxOffset: .1,
+    parallaxOffset: .05,
     parallaxDuration: .6,
     parallaxEase: "power2.out",
     // Debug
@@ -90,6 +93,7 @@
     scene: null,
     renderer: null,
     effectComposer: null,
+    rgbShiftPass: null,
     camera: null,
     // To separate position and parallax effect
     cameraGroup: null, 
@@ -161,12 +165,13 @@
 
     // Effect Composer
     tjs.effectComposer = new EffectComposer(tjs.renderer)
-    const renderPass = new RenderPass(tjs.scene, tjs.camera)
-    tjs.effectComposer.addPass(renderPass)
-    // tjs.effectComposer.addPass(new SMAAPass(1920, 1080))
-    // tjs.effectComposer.addPass(new BloomPass(1, 25, .4))
+    
+    tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
+    
+    tjs.effectComposer.addPass(new RenderPass(tjs.scene, tjs.camera))
+    tjs.effectComposer.addPass(tjs.rgbShiftPass)
     tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
-
+    
     // Orbit Controls
     tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
     tjs.orbitControls.enableDamping = true
@@ -291,9 +296,11 @@
     if(!tjs.isReady || settings.enableOrbit) {
       return
     }
+
     let offsetX = (x / window.innerWidth - .5)
     let offsetY = -(y / window.innerHeight - .5)
 
+    // Move camera
     gsap.killTweensOf(tjs.camera.position)
     gsap.killTweensOf(tjs.camera.rotation)
     gsap.to(tjs.camera.position, {
@@ -308,6 +315,10 @@
         x: -offsetY * settings.parallaxOffset,
         y: offsetX * settings.parallaxOffset,
     })
+
+    // Update RGB shift
+    let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)
+    tjs.rgbShiftPass.material.uniforms.amount.value = (Math.random() * .4 + .6) * distanceToCenter * .006
   }
 
   // ===================================================
