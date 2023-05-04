@@ -58,6 +58,10 @@
     rotationY: .28,
     rotationZ: -.08,
     fov: 70,
+    // Postprocess
+    pp: {
+      vhsNoise: .1,
+    },
     // Camera parallax
     parallaxOffset: .05,
     parallaxDuration: .6,
@@ -131,9 +135,9 @@
   // ===================================================
   async function load() {
     const loadingManager = new THREE.LoadingManager()
-    loadingManager.onStart = () => console.log('starting loading')
-    loadingManager.onProgress = () => console.log('loading progress')
-    loadingManager.onError = () => console.log('loading error')
+    // loadingManager.onStart = () => console.log('starting loading')
+    // loadingManager.onProgress = () => console.log('loading progress')
+    // loadingManager.onError = () => console.log('loading error')
     loadingManager.onLoad = initScene
     
     const imageLoader = new THREE.ImageLoader(loadingManager)
@@ -197,14 +201,15 @@
     // Postprocess: RGB Shift
     tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
     tjs.rgbShiftPass.material.uniforms.amount.value = settings.maxRgbShift
-    console.log("postprocess", tjs.rgbShiftPass.material.uniforms.amount)
 
     // Postprocess: VHS shader
     tjs.vhsPass = new ShaderPass({
         vertexShader: vhsVertexShader,
         fragmentShader: vhsFragmentShader,
         uniforms: {
-            tDiffuse: { value: null }
+            tDiffuse: { value: null },
+            uTime: { value: 0 },
+            uNoise: { value: settings.pp.vhsNoise },
         }
     })
     
@@ -212,6 +217,7 @@
     tjs.effectComposer = new EffectComposer(tjs.renderer)
     tjs.effectComposer.addPass(new RenderPass(tjs.scene, tjs.camera))
     tjs.effectComposer.addPass(tjs.rgbShiftPass)
+    tjs.effectComposer.addPass(tjs.vhsPass)
     // tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
     
     // Orbit Controls
@@ -256,7 +262,6 @@
     props.projects.forEach((project, i) => {
       let {x, y, z} = project.cameraTargetPosition
       if(i == 0) {
-        console.log(project.cameraTargetPosition, tjs.cameraGroup.position.x)
         // Set starting position on first project
         tjs.cameraGroup.position.x = x
         tjs.cameraGroup.position.y = y
@@ -449,6 +454,9 @@
   // ===================================================
   function refresh() {
     let t = tjs.clock.getElapsedTime()
+
+    // Update some shaders
+    tjs.vhsPass.uniforms.uTime.value = t
 
     // Update controls
     if(settings.enableOrbit) {
