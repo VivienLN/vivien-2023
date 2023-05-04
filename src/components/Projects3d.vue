@@ -52,7 +52,7 @@
   const settings = {
     background: 0xd77c64,
     fogMin: 2,
-    fogMax: .16,
+    fogMax: .2,
     // Camera
     viewpoint: new THREE.Vector3(0, 0, 2),
     rotationY: .28,
@@ -63,7 +63,7 @@
       vhsNoise: .08,
       vignetteInner: .4,
       vignetteOuter: .8,
-      vignetteOpacity: .5,
+      vignetteOpacity: .4,
       vignettePulse: 8,
     },
     // Camera parallax

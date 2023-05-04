@@ -11,6 +11,8 @@ uniform float uVignettePulse;
 
 varying vec2 vUv;
 
+vec2 uv;
+
 // https://thebookofshaders.com/10
 float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
@@ -23,7 +25,7 @@ float getRandomRange(float value, float delta, vec2 st) {
 }
 
 vec4 noise(vec4 c) {
-    vec2 st = vUv * mod(uTime, 10.0);
+    vec2 st = uv * mod(uTime, 10.0);
     c.r = getRandomRange(c.r, uNoise, st);
     c.g = getRandomRange(c.g, uNoise, st);
     c.b = getRandomRange(c.b, uNoise, st);
@@ -42,9 +44,17 @@ vec4 vignette(vec4 c, vec2 uv) {
 
 void main()
 {
-    vec4 c = texture2D(tDiffuse, vUv);
+    // Horizontal noise
+    uv = vUv;
+    uv.x += random(vec2(uTime * 0.00001, uv.y)) * .0008;
+
+    // Fetch data
+    vec4 c = texture2D(tDiffuse, uv);
+
+    // Apply color effects
     c = noise(c);
     c = vignette(c, vUv);
 
+    // Final output
     gl_FragColor = c;
 }
