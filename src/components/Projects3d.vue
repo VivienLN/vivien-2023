@@ -60,13 +60,18 @@
     fov: 70,
     // Postprocess
     pp: {
-      vhsNoise: .1,
+      vhsNoise: .08,
+      vignetteInner: .4,
+      vignetteOuter: .8,
+      vignetteOpacity: .5,
+      vignettePulse: 8,
     },
     // Camera parallax
     parallaxOffset: .05,
     parallaxDuration: .6,
     parallaxEase: "power2.out",
-    maxRgbShift: .004,
+    minRgbShift: .001,
+    maxRgbShift: .005,
     // Debug
     enableGui: false,
     enableOrbit: false,
@@ -200,6 +205,7 @@
 
     // Postprocess: RGB Shift
     tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
+    tjs.rgbShiftPass.material.uniforms.angle.value = -.4
     tjs.rgbShiftPass.material.uniforms.amount.value = settings.maxRgbShift
 
     // Postprocess: VHS shader
@@ -210,6 +216,10 @@
             tDiffuse: { value: null },
             uTime: { value: 0 },
             uNoise: { value: settings.pp.vhsNoise },
+            uVignetteInner: { value: settings.pp.vignetteInner },
+            uVignetteOuter: { value: settings.pp.vignetteOuter },
+            uVignetteOpacity: { value: settings.pp.vignetteOpacity },
+            uVignettePulse: { value: settings.pp.vignettePulse },
         }
     })
     
@@ -344,9 +354,10 @@
     })
 
     // Update RGB shift
-    let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)    
+    let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)
+    let m = Math.random() * .4 + .6
     gsap.to(tjs.rgbShiftPass.material.uniforms.amount, {
-        value: (Math.random() * .4 + .6) * distanceToCenter * settings.maxRgbShift,
+        value: settings.minRgbShift + (distanceToCenter * m * (settings.maxRgbShift - settings.minRgbShift)),
         ease: settings.parallaxEase,
     })
   }
