@@ -18,6 +18,8 @@
   import * as dat from 'lil-gui'
   import pictureVertexShader from '../shaders/picture-particles/vertex.glsl'
   import pictureFragmentShader from '../shaders/picture-particles/fragment.glsl'
+  import vhsVertexShader from '../shaders/vhs/vertex.glsl'
+  import vhsFragmentShader from '../shaders/vhs/fragment.glsl'
   
   // GSAP imports
   import gsap from "gsap"
@@ -93,8 +95,10 @@
     clock: new THREE.Clock(),
     scene: null,
     renderer: null,
+    // Post process
     effectComposer: null,
     rgbShiftPass: null,
+    vhsPass: null,
     camera: null,
     // To separate position and parallax effect
     cameraGroup: null, 
@@ -164,21 +168,6 @@
     tjs.cameraGroup.add(tjs.camera)
     tjs.scene.add(tjs.cameraGroup)
 
-    // Effect Composer
-    tjs.effectComposer = new EffectComposer(tjs.renderer)
-    
-    tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
-    tjs.rgbShiftPass.material.uniforms.amount.value = settings.maxRgbShift
-    
-    tjs.effectComposer.addPass(new RenderPass(tjs.scene, tjs.camera))
-    tjs.effectComposer.addPass(tjs.rgbShiftPass)
-    // tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
-    
-    // Orbit Controls
-    tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
-    tjs.orbitControls.enableDamping = true
-    tjs.orbitControls.enabled = settings.enableOrbit
-
     // Axes
     tjs.axesHelper = new THREE.AxesHelper(1)
     tjs.scene.add(tjs.axesHelper)
@@ -204,6 +193,31 @@
     if(settings.enableGui) {
       setupGui()
     }
+
+    // Postprocess: RGB Shift
+    tjs.rgbShiftPass = new ShaderPass(RGBShiftShader)
+    tjs.rgbShiftPass.material.uniforms.amount.value = settings.maxRgbShift
+    console.log("postprocess", tjs.rgbShiftPass.material.uniforms.amount)
+
+    // Postprocess: VHS shader
+    tjs.vhsPass = new ShaderPass({
+        vertexShader: vhsVertexShader,
+        fragmentShader: vhsFragmentShader,
+        uniforms: {
+            tDiffuse: { value: null }
+        }
+    })
+    
+    // Effect Composer: add passes
+    tjs.effectComposer = new EffectComposer(tjs.renderer)
+    tjs.effectComposer.addPass(new RenderPass(tjs.scene, tjs.camera))
+    tjs.effectComposer.addPass(tjs.rgbShiftPass)
+    // tjs.effectComposer.addPass(new FilmPass(.4, .1, 2000, false))
+    
+    // Orbit Controls
+    tjs.orbitControls = new OrbitControls(tjs.camera, canvas)
+    tjs.orbitControls.enableDamping = true
+    tjs.orbitControls.enabled = settings.enableOrbit
 
     // Flag as ready
     tjs.isReady = true
@@ -308,8 +322,9 @@
     let offsetY = y !== undefined ? -(y / window.innerHeight - .5) : 0
 
     // Move camera
-    gsap.killTweensOf(tjs.camera.position)
-    gsap.killTweensOf(tjs.camera.rotation)
+    // gsap.killTweensOf(tjs.camera.position)
+    // gsap.killTweensOf(tjs.camera.rotation)
+
     gsap.to(tjs.camera.position, {
         duration: settings.parallaxDuration,
         ease: settings.parallaxEase,
@@ -324,8 +339,7 @@
     })
 
     // Update RGB shift
-    let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)
-    
+    let distanceToCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY)    
     gsap.to(tjs.rgbShiftPass.material.uniforms.amount, {
         value: (Math.random() * .4 + .6) * distanceToCenter * settings.maxRgbShift,
         ease: settings.parallaxEase,
@@ -342,9 +356,6 @@
 
     // Material
     const particlesMaterial = new THREE.RawShaderMaterial({
-        // alphaTest: 0.001,
-        // depthWrite: false,
-        // depthTest: false,
         vertexColors: true,
         transparent: true,
         vertexShader: pictureVertexShader,
