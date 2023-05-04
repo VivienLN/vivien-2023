@@ -60,14 +60,14 @@
     parallaxOffset: .05,
     parallaxDuration: .6,
     parallaxEase: "power2.out",
-    maxRgbShift: .008,
+    maxRgbShift: .004,
     // Debug
     enableGui: false,
     enableOrbit: false,
     enableAxesHelper: false,
     // Images
     image3dToPxRatio: .012,
-    imageParticleColor: 0x7b5698, //0xf85d4c,
+    imageParticleColor: 0x6b4688, // 0x7b5698, //0xf85d4c,
     imageParticleSize: 17, // Depends on screen size
     imageParticleMinZ: -2,
     imageParticleMaxZ: 1.5,
@@ -219,6 +219,9 @@
 
     // Fire first update of scene (according to index)
     update()
+
+    // Parallax 
+    handleParallax()
   }
   
   // ===================================================
@@ -301,8 +304,8 @@
       return
     }
 
-    let offsetX = (x / window.innerWidth - .5)
-    let offsetY = -(y / window.innerHeight - .5)
+    let offsetX = x !== undefined ? (x / window.innerWidth - .5) : 0
+    let offsetY = y !== undefined ? -(y / window.innerHeight - .5) : 0
 
     // Move camera
     gsap.killTweensOf(tjs.camera.position)
