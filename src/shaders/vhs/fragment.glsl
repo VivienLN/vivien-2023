@@ -48,13 +48,36 @@ void main()
     uv = vUv;
     uv.x += random(vec2(uTime * 0.00001, uv.y)) * .0008;
 
+    // Scan lines
+    // float scanLine = sin(uv.y * 12.0 + uTime) * .004;
+    // uv.x +=scanLine;
+    float scanLine = 0.0;
+    scanLine += step(.5, sin(uv.y * 1.0 + uTime * .4)) * .0008;
+    scanLine += step(.4, sin(5.0 + uv.y * 2.0 + uTime * -.15)) * .001;
+
+    // float w1 = pow(sin(uv.y * 40.0 * (sin(uTime) * .2 + .22) + uTime * 1.8), 8.0) * .04;
+    // Thanks to https://graphtoy.com/
+    float w1 = pow(sin(uTime + uv.y * 20.0 ), 8.0) * .005;
+    float w2 = sin(uTime * 1.2 - uv.y * 10.0) * .5 + .4;
+    float w3 = smoothstep(-.2, .8, sin(uTime * .9 + uv.y * 3.0));
+    float w4 = pow(sin(-uTime * 2.7 + uv.y * 26.0 + 1.0), 4.0) * .005;
+
+    // uv.x += w4 * w3;
+    uv.x += w1 * w2 * w3;
+    // uv.x = clamp(0.0, 1.0, uv.x + offsetLine);
+    // uv.x += offsetLine;
+    uv.x += scanLine;
+
     // Fetch data
     vec4 c = texture2D(tDiffuse, uv);
 
     // Apply color effects
     c = noise(c);
-    c = vignette(c, vUv);
+    c = vignette(c, uv);
 
     // Final output
+    // c.r = uv.x * .2;
+    // c.g = 0.0;
+    // c.b = uv.y * .2;
     gl_FragColor = c;
 }
