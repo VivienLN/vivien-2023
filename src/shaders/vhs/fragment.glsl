@@ -26,10 +26,12 @@ float getRandomRange(float value, float delta, vec2 st) {
 
 vec4 noise(vec4 c) {
     vec2 st = uv * mod(uTime, 10.0);
-    c.r = getRandomRange(c.r, uNoise, st);
-    c.g = getRandomRange(c.g, uNoise, st);
-    c.b = getRandomRange(c.b, uNoise, st);
-    return c;
+    return vec4(
+        c.r = getRandomRange(c.r, uNoise, st),
+        c.g = getRandomRange(c.g, uNoise, st),
+        c.b = getRandomRange(c.b, uNoise, st),
+        1.0
+    );
 }
 
 vec4 vignette(vec4 c, vec2 uv) {
@@ -42,6 +44,13 @@ vec4 vignette(vec4 c, vec2 uv) {
     return c;
 }
 
+vec4 horizontalLines(vec4 c, vec2 uv) {
+    vec2 st = uv * mod(uTime, 10.0);
+    float m = (mod(uv.y * 600.0, 2.0) - .5) * .01;
+    // return vec4(m, m, m, 1.0);
+    return vec4(c.rgb + m, 1.0);
+}
+
 void main()
 {
     // Horizontal noise
@@ -49,24 +58,18 @@ void main()
     uv.x += random(vec2(uTime * 0.00001, uv.y)) * .0008;
 
     // Scan lines
-    // float scanLine = sin(uv.y * 12.0 + uTime) * .004;
-    // uv.x +=scanLine;
     float scanLine = 0.0;
-    scanLine += step(.5, sin(uv.y * 1.0 + uTime * .4)) * .0008;
-    scanLine += step(.4, sin(5.0 + uv.y * 2.0 + uTime * -.15)) * .001;
+    scanLine += step(.5, sin(uv.y * 1.0 + uTime * .4)) * .0009;
+    scanLine += step(.4, sin(5.0 + uv.y * 2.0 + uTime * -.15)) * .0014;
 
-    // float w1 = pow(sin(uv.y * 40.0 * (sin(uTime) * .2 + .22) + uTime * 1.8), 8.0) * .04;
     // Thanks to https://graphtoy.com/
     float w1 = pow(sin(uTime * .1 + uv.y * 32.0 ), 8.0) * .005;
-    float w2 = sin(uTime * 1.2 - uv.y * 10.0) * .5 + .2;
-    float w3 = smoothstep(-.2, .8, sin(uTime * .9 + uv.y * 3.0));
-    float w4 = pow(sin(-uTime * 2.7 + uv.y * 16.0 + 1.0), 4.0) * .005;
+    float w2 = sin(uTime * 2.2 - uv.y * 10.0) * .5 + .2;
+    float w3 = smoothstep(-.1, .6, sin(uTime * 3.9 + uv.y * 4.0));
+    float w4 = pow(sin(-uTime * 2.7 + uv.y * 16.0 + 1.0), 4.0) * .003;
 
-    // uv.x += w4 * w3;
-    uv.x += w1 * w2 * w3;
-    // uv.x = clamp(0.0, 1.0, uv.x + offsetLine);
-    // uv.x += offsetLine;
-    uv.x += scanLine;
+    // Compose final position
+    uv.x += scanLine + (w1 + w4) * w2 * w3;
 
     // Fetch data
     vec4 c = texture2D(tDiffuse, uv);
@@ -74,7 +77,7 @@ void main()
     // Apply color effects
     c = noise(c);
     c = vignette(c, uv);
-
+    c = horizontalLines(c, uv);
     // Final output
     // c.r = uv.x * .2;
     // c.g = 0.0;
