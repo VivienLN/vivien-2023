@@ -57,10 +57,10 @@ void main()
 
     // float w1 = pow(sin(uv.y * 40.0 * (sin(uTime) * .2 + .22) + uTime * 1.8), 8.0) * .04;
     // Thanks to https://graphtoy.com/
-    float w1 = pow(sin(uTime + uv.y * 20.0 ), 8.0) * .005;
-    float w2 = sin(uTime * 1.2 - uv.y * 10.0) * .5 + .4;
+    float w1 = pow(sin(uTime * .1 + uv.y * 32.0 ), 8.0) * .005;
+    float w2 = sin(uTime * 1.2 - uv.y * 10.0) * .5 + .2;
     float w3 = smoothstep(-.2, .8, sin(uTime * .9 + uv.y * 3.0));
-    float w4 = pow(sin(-uTime * 2.7 + uv.y * 26.0 + 1.0), 4.0) * .005;
+    float w4 = pow(sin(-uTime * 2.7 + uv.y * 16.0 + 1.0), 4.0) * .005;
 
     // uv.x += w4 * w3;
     uv.x += w1 * w2 * w3;
