@@ -121,6 +121,9 @@
         <div>
           <h2 class="title" v-html="computeText(project.title)"></h2>
           <p class="subtitle">{{ project.subtitle }}</p>
+          <div>
+            <a class="btn" href="#">Voir</a>
+          </div>
         </div>
       </section>
     </div>
@@ -145,6 +148,7 @@
     justify-content: center;
     text-align: left;
     color: #ffc;
+    font-size: min(3vw, 1.5vh);
   }
   .title {
     font-size: min(20vw, 10vh);
@@ -160,7 +164,13 @@
     text-transform: uppercase;
     font-family: sans-serif;
     font-weight: bold;
-    font-size: min(3vw, 1.5vh);
     text-shadow: .03em .05em .4em rgba(0, 0, 0, .1); 
+    margin-bottom: 2rem;
+  }
+  .btn {
+    padding: 1rem;
+    background: #fd2;
+    color: #000;
+    display: inline-block;
   }
 </style>
