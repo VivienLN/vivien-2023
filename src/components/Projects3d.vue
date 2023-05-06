@@ -54,9 +54,8 @@
     fogMin: 2,
     fogMax: .2,
     // Camera
-    viewpoint: new THREE.Vector3(0, 0, 2),
-    rotationY: .28,
-    rotationZ: -.08,
+    viewpoint: new THREE.Vector3(0.7, 0, 2),
+    viewpointRotationY: .5,
     fov: 70,
     // Postprocess
     pp: {
@@ -82,8 +81,9 @@
     imageParticleSize: 17, // Depends on screen size
     imageParticleMinZ: -2,
     imageParticleMaxZ: 1.5,
-    imageRotationOffset: .5,
-    imageRotationRadius: 5.2,
+    imageRotationOffset: .4,
+    imageRotationRadius: 7.2,
+    imageOffsetX: 1,
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
@@ -277,8 +277,7 @@
         tjs.cameraGroup.position.y = y
         tjs.cameraGroup.position.z = z
         tjs.cameraGroup.rotation.x = project.cameraTargetRotation
-        tjs.cameraGroup.rotation.y = settings.rotationY
-        tjs.cameraGroup.rotation.z = settings.rotationZ
+        tjs.cameraGroup.rotation.y = settings.viewpointRotationY
       } else {
         // Set timeline stops
         // Position
@@ -293,7 +292,8 @@
         timeline.to(tjs.cameraGroup.rotation, {
           duration: .6,
           ease: settings.navTransitionEase,
-          x: project.cameraTargetRotation
+          x: project.cameraTargetRotation,
+          y: settings.viewpointRotationY,
         }, "<")
       }
       if(i == 0) return
@@ -413,10 +413,11 @@
         let colorIndex = i * 4      // r, g, b, a in imgData
         let finalPosition = new THREE.Vector3()
 
-        // Cast ray from particle position on the plane (z=0) to viewpoint
+        // Cast ray from particle position on the cylinder
         let projectedX = (x - w / 2) * settings.image3dToPxRatio
         let projectedY = -((y - h / 2) * settings.image3dToPxRatio)
-        let projectedPosition = new THREE.Vector3(projectedX, projectedY, 0)
+        let projectedZ = Math.sin(Math.atan2(projectedY, settings.imageRotationRadius)) * projectedY
+        let projectedPosition = new THREE.Vector3(projectedX, projectedY, projectedZ)
 
         // Get input image pixel value (luminosity)
         let r = imgData.data[colorIndex] / 255
