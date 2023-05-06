@@ -1,6 +1,6 @@
 <script setup>
   // VueJS imports
-  import { onMounted, onBeforeUpdate, ref } from 'vue'
+  import { onMounted, onBeforeUpdate, ref, watch } from 'vue'
   import { useResize } from '../composables/resize.js'
   import { useMousePosition } from '../composables/mouseposition.js'
 
@@ -25,6 +25,8 @@
   import gsap from "gsap"
   import { ScrollTrigger } from "gsap/ScrollTrigger"
   gsap.registerPlugin(ScrollTrigger)
+  import { ScrollToPlugin } from "gsap/ScrollToPlugin"
+  gsap.registerPlugin(ScrollToPlugin)
   import { CustomEase } from "gsap/CustomEase"
   gsap.registerPlugin(CustomEase)
 
@@ -33,6 +35,10 @@
     projects: {
       type: Array,
       required: true
+    },
+    activeProject: {
+      type: Number,
+      required: false,
     },
     settings: {
       type: Object,
@@ -54,8 +60,11 @@
     fogMin: 2,
     fogMax: .2,
     // Camera
-    viewpoint: new THREE.Vector3(0.7, 0, 2),
+    viewpoint: new THREE.Vector3(.7, 0, 2),
     viewpointRotationY: .5,
+    // Relative to global camera position (thanks to grouping, cf. camera objects/groups)
+    viewpointActive: new THREE.Vector3(-.3, 0, -.9),
+    viewPointActiveRotationY: -.9,
     fov: 70,
     // Postprocess
     pp: {
@@ -87,6 +96,8 @@
     // Animations
     navTransitionDuration: 2,
     navTransitionEase: "power1.inOut",
+    activeTransitionDuration: 4,
+    activeTransitionEase: CustomEase.create("custom", "M0,0,C0,0,0,0,0,0,0.13,0,0.15,0.354,0.286,0.674,0.422,0.995,0.558,1,1,1"),
     // Override settings with props
     ...props.settings
   }
@@ -109,11 +120,15 @@
     rgbShiftPass: null,
     vhsPass: null,
     camera: null,
-    // To separate position and parallax effect
+    // To separate position, "active" project camera, and parallax effect
+    // cameraGroup (main moving camera group) > cameraActiveGroup (inside project) > camera (for parallax)
     cameraGroup: null, 
+    cameraActiveGroup: null, 
     orbitControls: null,
     axesHelper: null,
     gui: null,
+    // GSAP
+    projectsTimeline: null,
   }
   const sizes = useResize(threeCanvas, (w, h) => {
     tjs.camera.aspect = w / h
@@ -168,13 +183,19 @@
     })
 
     // Camera
-    // cameraGroup handles the position in the world
-    // camera itself moves inside to handle parallax effect
+    // Camera > cameraGroup > camera
+    // - cameraGroup handles the position in the world, linked to scroll animation
+    // - cameraActiveGroup handles the position "inside" or "outside". Used to be animated separately from cameraGroup
+    // - camera itself moves inside to handle parallax effect
+    tjs.camera = new THREE.PerspectiveCamera(settings.fov)
+
+    tjs.cameraActiveGroup = new THREE.Group()
+    tjs.cameraActiveGroup.add(tjs.camera)
+
     tjs.cameraGroup = new THREE.Group()
     tjs.cameraGroup.position.copy(settings.viewpoint)
+    tjs.cameraGroup.add(tjs.cameraActiveGroup)
 
-    tjs.camera = new THREE.PerspectiveCamera(settings.fov)
-    tjs.cameraGroup.add(tjs.camera)
     tjs.scene.add(tjs.cameraGroup)
 
     // Axes
@@ -252,6 +273,9 @@
 
     // Parallax 
     handleParallax()
+
+    // Watch activeproject
+    watch(() => props.activeProject, onActiveProjectChange)
   }
   
   // ===================================================
@@ -261,7 +285,7 @@
     if(settings.enableOrbit) {
       return
     }
-    const timeline = gsap.timeline({
+    tjs.projectsTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: props.scrollTriggerElement,
         start: "top top",
@@ -281,7 +305,7 @@
       } else {
         // Set timeline stops
         // Position
-        timeline.to(tjs.cameraGroup.position, {
+        tjs.projectsTimeline.to(tjs.cameraGroup.position, {
           duration: 1,
           ease: settings.navTransitionEase,
           x: x,
@@ -289,14 +313,50 @@
           z: z
         })
         // Rotation
-        timeline.to(tjs.cameraGroup.rotation, {
+        tjs.projectsTimeline.to(tjs.cameraGroup.rotation, {
           duration: .6,
           ease: settings.navTransitionEase,
           x: project.cameraTargetRotation,
           y: settings.viewpointRotationY,
         }, "<")
       }
-      if(i == 0) return
+      tjs.projectsTimeline.addLabel(`project-${i}`)
+    })
+  }
+
+  // ===================================================
+  // Move camera when active project changes
+  // ===================================================
+  function onActiveProjectChange(newValue, oldValue) {
+    if(newValue !== null) {
+      var target = settings.viewpointActive
+      var rotationY = settings.viewPointActiveRotationY
+
+      // Also: scroll to project in window (this will align cameraGroup too)
+      let scrollY = tjs.projectsTimeline.scrollTrigger.labelToScroll(`project-${newValue}`)
+      gsap.to(window, {
+        duration: settings.activeTransitionDuration, 
+        ease: settings.activeTransitionEase,
+        scrollTo: scrollY
+      });
+
+    } else {
+      var target = new THREE.Vector3(0, 0, 0)
+      var rotationY = 0
+    }
+
+    let {x, y, z} = target
+    gsap.to(tjs.cameraActiveGroup.position, {
+      duration: settings.activeTransitionDuration,
+      ease: settings.activeTransitionEase,
+      x: x,
+      y: y,
+      z: z,
+    })
+    gsap.to(tjs.cameraActiveGroup.rotation, {
+      duration: settings.activeTransitionDuration,
+      ease: settings.activeTransitionEase,
+      y: rotationY,
     })
   }
 
@@ -304,7 +364,7 @@
   // Update the scene according to current index
   // ===================================================
   function update() {
-    // TODO: Remove update() if we only use scroll
+    // TODO: Remove if we only use scroll
     return
     let project = props.projects[props.currentIndex]
     let {x, y, z} = project.cameraTargetPosition

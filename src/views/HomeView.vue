@@ -75,6 +75,9 @@
   // ===================================================
   // Navigation functions
   // ===================================================
+
+  // Null or index of "open" project
+  const activeProject = ref(null)
   
   const currentIndex = ref(0)
 
@@ -114,6 +117,7 @@
       :currentIndex="currentIndex"
       :projects="projects"
       :settings="sceneSettings"
+      :activeProject="activeProject"
       scrollTriggerElement=".projects"
     />
     <div class="projects">
@@ -122,7 +126,8 @@
           <h2 class="title" v-html="computeText(project.title)"></h2>
           <p class="subtitle">{{ project.subtitle }}</p>
           <div>
-            <a class="btn" href="#">Voir</a>
+            <a class="btn" href="#" @click.prevent="activeProject=index">Voir</a>
+            <a class="btn" href="#" @click.prevent="activeProject=null">Quitter</a>
           </div>
         </div>
       </section>
