@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+  import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
   import Projects3d from '@/components/Projects3d.vue'
   import projects from '@/data/projects.json'
   
@@ -52,7 +52,7 @@
             ease: "power2.out",
             opacity: 0,
             x: 10,
-            y: 60,
+            y: 80,
             scale: .8,
           }, "<.025")
         })
@@ -62,10 +62,18 @@
       gsap.from(project.querySelector('.subtitle'), {
         scrollTrigger: projectTrigger,
         duration: .8,
-        delay: .3,
+        delay: .1,
         ease: "power3.out",
         opacity: 0,
-        y: -10,
+        y: 40,
+      })
+      gsap.from(project.querySelector('.btn'), {
+        scrollTrigger: projectTrigger,
+        duration: .2,
+        delay: .1,
+        ease: "power3.out",
+        opacity: 0,
+        y: 20,
       })
 
       
@@ -79,6 +87,13 @@
   // Null or index of "open" project
   const activeProject = ref(null)
   
+  watch(activeProject, (newValue, oldValue) => {
+    console.log(`from ${oldValue} to ${newValue}`)
+    // Disable window scroll when a project is active
+    document.body.style.overflow = newValue !== null ? "hidden" : null
+  })
+  
+  // TODO: Old nav: remove
   const currentIndex = ref(0)
 
   function previous() {
@@ -120,15 +135,40 @@
       :activeProject="activeProject"
       scrollTriggerElement=".projects"
     />
-    <div class="projects">
-      <section class="project" v-for="(project, index) in projects" :key="index">
-        <div>
-          <h2 class="title" v-html="computeText(project.title)"></h2>
-          <p class="subtitle">{{ project.subtitle }}</p>
-          <div>
-            <a class="btn" href="#" @click.prevent="activeProject=index">Voir</a>
+    <div class="projects" :class="{'has-active': activeProject !== null}">
+      <section class="project" :class="{active: index === activeProject}" v-for="(project, index) in projects" :key="index">
+        <div class="header container">
+          <a class="link" href="#" @click.prevent="activeProject=index">
+            <h2 class="title" v-html="computeText(project.title)"></h2>
+            <p class="subtitle">{{ project.subtitle }}</p>
+            <div>
+              <span class="btn">
+                <span>Fais voir</span>
+                <i class="arrow">
+                  <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
+                </i>
+              </span>
+            </div>
+          </a>
+        </div>
+        <div class="content container" v-if="index === activeProject">
             <a class="btn" href="#" @click.prevent="activeProject=null">Quitter</a>
-          </div>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla iaculis est non consequat vestibulum. Etiam mi metus, suscipit sit amet posuere vel, auctor vitae lacus. Mauris tempor, lorem non dignissim rhoncus, risus odio mollis enim, in commodo tortor turpis et neque. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Duis augue augue, porttitor vel elementum faucibus, faucibus quis neque. Maecenas quis sagittis lorem, sit amet consequat quam. Suspendisse potenti. Quisque non blandit augue. Vivamus consequat tellus quis tellus varius vehicula. Aliquam vitae ornare sapien, sit amet ornare mauris. Donec nibh ipsum, finibus at neque venenatis, ultricies sagittis mi. Phasellus malesuada quam ac erat dapibus, eget ullamcorper eros porta. Nulla nisl nisi, fermentum commodo porttitor consectetur, auctor nec odio. Interdum et malesuada fames ac ante ipsum primis in faucibus.
+          <br>
+          <br>
+          Integer lorem nibh, vestibulum nec eros porta, posuere elementum lorem. In hac habitasse platea dictumst. Maecenas vitae sollicitudin nisi. Suspendisse nisl urna, aliquam ut turpis non, tempus tincidunt metus. Donec dictum nunc eu fringilla convallis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer elementum dui id nisi pretium, eu feugiat metus dapibus. Nunc nec finibus ex.
+
+          <br>
+          <br>
+          Vivamus dictum porttitor posuere. Suspendisse mattis in metus eget fringilla. Sed sit amet blandit felis, sed efficitur dolor. Praesent egestas maximus risus vitae fermentum. Donec tincidunt, ipsum in accumsan imperdiet, ligula nulla laoreet est, id tincidunt nibh leo vitae dolor. In auctor urna in nisl dignissim lobortis. Nam consectetur ipsum sed nisl facilisis hendrerit. Etiam efficitur vitae libero at varius. Curabitur iaculis tellus non nunc vestibulum euismod. Etiam porttitor, ante vitae volutpat rhoncus, neque felis ornare est, vel scelerisque erat orci et erat. Nulla a velit sit amet neque mollis vulputate quis in risus. Suspendisse potenti. Sed vel libero vel sem venenatis sollicitudin vel vitae lorem. Fusce tristique luctus quam.
+          <br>
+          <br>
+
+          Etiam venenatis mi nec nulla placerat venenatis. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla eget quam sed nunc tristique vestibulum a a justo. Ut dignissim, arcu vel egestas tincidunt, magna ligula pulvinar purus, nec sollicitudin nisl eros non libero. Suspendisse in varius risus. Sed quis dui non odio ultricies aliquam quis quis ex. Pellentesque pharetra at nisl nec condimentum. Nunc pretium velit augue, eu semper neque aliquam eget. Nam ut sapien a lectus finibus fringilla non et metus. Cras vel ligula sed lacus pharetra cursus.
+          <br>
+          <br>
+
+          In ut gravida mauris. Sed tempus orci a lacus hendrerit ornare. Nunc venenatis ac felis non aliquet. Sed fermentum tellus at porta molestie. Donec luctus pulvinar augue. Cras non leo id nisl tincidunt fermentum. Mauris et orci ac diam lacinia aliquet.
         </div>
       </section>
     </div>
@@ -140,42 +180,113 @@
     position: relative;
     z-index: 10;
   }
+  .container {
+    margin: 0 auto;
+    max-width: 1200px;
+  }
   .projects {
     position: relative;
     z-index: 10;
+    background-color: #b9644c00;
+    transition: background-color 3s ease-in-out;
   }
-  section.project {
+  .project {
+    height: 100vh;
+  }
+  .project .header {
     height: 80vh;
-    padding: 0 10vw;
-    text-align: center;
+    padding: 20vh 0 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    text-align: left;
+  }
+  .project .link {
+    text-decoration: none;
     color: #ffc;
     font-size: min(3vw, 1.5vh);
   }
+
   .title {
     font-size: min(20vw, 10vh);
     font-weight: normal;
-    /* text-transform: uppercase; */
     font-family: 'Allenoire', sans-serif;
-    /* letter-spacing: .02em; */
-    /* text-shadow: .06em .08em 0 #7b5698;  */
     text-shadow: .02em .04em .1em rgba(0, 0, 0, .1); 
+    line-height: 1;
+    margin-bottom: .4rem;
   }
+
   .subtitle {
+    font-size: 1.2rem;
+    letter-spacing: .08em;
     display: inline-block;
-    text-transform: uppercase;
-    font-family: sans-serif;
-    font-weight: bold;
+    /* text-transform: uppercase; */
     text-shadow: .03em .05em .4em rgba(0, 0, 0, .1); 
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
   }
-  .btn {
-    padding: 1rem;
-    background: #fd2;
+
+  .project .link .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5em;    
+    padding: 1rem 1.6rem .86rem;
+    border: 2px solid #ffd04f;
+    color: #ffd04f;
+    text-decoration: none;
+    border-radius: .4rem;
+    text-transform: uppercase;
+    transition: .4s ease-in-out;
+    font-weight: bold;
+    letter-spacing: .08em;
+    /* clip-path: polygon(0 19%, 100% 0%, 95% 100%, 5% 94%); */
+  }
+
+  .project .link .btn .arrow {
+    fill: currentColor;
+    position: relative;
+    width: 1.2rem;
+    height: 1.2rem;
+    overflow: hidden;
+  }
+
+  .project .link .btn .arrow svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  @keyframes arrow-hover {
+    0% { left: 0%; }
+    50% { left: 110%; }
+    51% { left: -110%; }
+    100% { left: 0%; }
+  }
+
+  .project .link:hover .btn {
+    background-color: #ffd04f;
     color: #000;
-    display: inline-block;
+  }
+  .project .link:hover .btn .arrow svg {
+    animation: arrow-hover .4s ease-in-out forwards;
+  }
+
+  .project .content {
+    font-size: 1.8rem;
+    line-height: 1.5;
+    margin-bottom: auto;
+  }
+
+  .projects.has-active {
+    background-color: #3a213add;
+  }
+  .project.active {
+    overflow-y: scroll;
+  }
+  .project.active .content {
+    /* height: 100vh;
+    opacity: 1; */
+    /* overflow: visible; */
   }
 </style>

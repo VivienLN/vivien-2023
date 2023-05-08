@@ -335,7 +335,7 @@
       // Also: scroll to project in window (this will align cameraGroup too)
       let scrollY = tjs.projectsTimeline.scrollTrigger.labelToScroll(`project-${newValue}`)
       gsap.to(window, {
-        duration: settings.activeTransitionDuration, 
+        duration: settings.activeTransitionDuration / 2, 
         ease: settings.activeTransitionEase,
         scrollTo: scrollY
       });
