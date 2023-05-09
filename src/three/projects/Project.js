@@ -38,7 +38,7 @@ export default class Project {
   getMesh() {
     // Geometry
     const particlesGeometry = new THREE.BufferGeometry()
-    particlesGeometry.setAttribute('position', this.imageToGeomAttributes())
+    particlesGeometry.setAttribute('position', this.getGeomAttributes())
 
     // Material
     const particlesMaterial = new THREE.RawShaderMaterial({
@@ -63,7 +63,7 @@ export default class Project {
   // Calculate anamorphic particles geometry from an image,
   // and get the positions attributes
   // ===================================================
-  imageToGeomAttributes() {
+  getGeomAttributes() {
     const image = this.getImage()
     const imgData = this.getImageData(image)
     const w = image.width
