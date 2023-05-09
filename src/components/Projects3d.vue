@@ -15,7 +15,18 @@
   import { CustomEase } from "gsap/CustomEase"
   gsap.registerPlugin(CustomEase)
 
+  // ===================================================
+  // Here override threeJS parameters
+  // ===================================================
+  const sceneSettings = {
+    enableGui: true,
+    enableOrbit: false,
+    enableAxesHelper: false,    
+  }
+
+  // ===================================================
   // Props
+  // ===================================================
   const props = defineProps({
     projects: {
       type: Array,
@@ -39,9 +50,15 @@
     }
   })
   
-  // Ref for canvas
+  // ===================================================
+  // Refs
+  // ===================================================
   const threeCanvas = ref(null)
 
+  
+  // ===================================================
+  // ThreeJS scene and events
+  // ===================================================
   // 3D scene
   const projectsScene = new ProjectsScene(props.settings)
 

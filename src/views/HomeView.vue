@@ -8,15 +8,6 @@
   gsap.registerPlugin(ScrollTrigger)
 
   // ===================================================
-  // Here override threeJS parameters
-  // ===================================================
-  const sceneSettings = {
-    enableGui: true,
-    enableOrbit: false,
-    enableAxesHelper: false,    
-  }
-
-  // ===================================================
   // Text mangagement
   // ===================================================
   function computeText(input) {
@@ -125,7 +116,6 @@
     <Projects3d 
       :currentIndex="currentIndex"
       :projects="projects"
-      :settings="sceneSettings"
       :activeProject="activeProject"
       scrollTriggerElement=".projects"
     />
