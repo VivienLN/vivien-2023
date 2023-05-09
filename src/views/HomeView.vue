@@ -121,12 +121,6 @@
     <div>
       <button @click="previous">Précédent</button>
       <button @click="next">Suivant</button>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
     </div>
     <Projects3d 
       :currentIndex="currentIndex"
@@ -219,7 +213,7 @@
     font-size: 1.2rem;
     letter-spacing: .08em;
     display: inline-block;
-    /* text-transform: uppercase; */
+    text-transform: uppercase;
     text-shadow: .03em .05em .4em rgba(0, 0, 0, .1); 
     margin-bottom: 4rem;
   }
@@ -233,11 +227,8 @@
     color: #ffd04f;
     text-decoration: none;
     border-radius: .4rem;
-    text-transform: uppercase;
     transition: .4s ease-in-out;
-    font-weight: bold;
     letter-spacing: .08em;
-    /* clip-path: polygon(0 19%, 100% 0%, 95% 100%, 5% 94%); */
   }
 
   .project .link .btn .arrow {
