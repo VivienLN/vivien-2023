@@ -85,16 +85,6 @@
     // Disable window scroll when a project is active
     document.body.style.overflow = newValue !== null ? "hidden" : null
   })
-
-  // Reset the scroll to 0 inside content, otherwise browser will keep it when leaving/reentering
-  function onBeforeLeaveActiveProject(el) {
-    console.log(el, el.parentElement)
-    gsap.to(el.parentElement, {
-      duration: 1,
-      ease: "power2.out",
-      scrollTop: 0,
-    })
-  }
   
   // TODO: Old nav: remove
   const currentIndex = ref(0)
@@ -117,6 +107,12 @@
     return target > projects.length - 1 ? 0 : target
   }
 
+  
+  // ===================================================
+  // Nav
+  // ===================================================
+  // TODO: replace activeProject with router params/name
+
 </script>
 
 <template>
@@ -134,22 +130,26 @@
     <div class="projects" :class="{'has-active': activeProject !== null}">
       <section class="project" :class="{active: index === activeProject}" v-for="(project, index) in projects" :key="index">
         <div class="header container">
-          <a class="link" href="#" @click.prevent="activeProject=index">
+          <!-- <a class="link" href="#" @click.prevent="activeProject=index"> -->
+          <router-link class="link" :to="'/projects/'+project.slug">
             <h2 class="title" v-html="computeText(project.title)"></h2>
             <p class="subtitle">{{ project.subtitle }}</p>
             <div>
               <span class="btn">
-                <span>Fais voir</span>
+                  <span>Fais voir</span>
                 <i class="arrow">
                   <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
                 </i>
               </span>
             </div>
-          </a>
+          </router-link>
         </div>
-        <Transition @before-leave="onBeforeLeaveActiveProject">
-          <div class="content container" v-if="index === activeProject">
-              <a class="btn" href="#" @click.prevent="activeProject=null">Quitter</a>
+        <!-- <Transition> -->
+          <!-- <div class="content container" v-if="index === activeProject"> -->
+          <div class="content container" v-if="$route.name == 'project'">
+            Foobar
+            <!-- <RouterView /> -->
+            <!-- <a class="btn" href="#" @click.prevent="activeProject=null">Quitter</a>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla iaculis est non consequat vestibulum. Etiam mi metus, suscipit sit amet posuere vel, auctor vitae lacus. Mauris tempor, lorem non dignissim rhoncus, risus odio mollis enim, in commodo tortor turpis et neque. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Duis augue augue, porttitor vel elementum faucibus, faucibus quis neque. Maecenas quis sagittis lorem, sit amet consequat quam. Suspendisse potenti. Quisque non blandit augue. Vivamus consequat tellus quis tellus varius vehicula. Aliquam vitae ornare sapien, sit amet ornare mauris. Donec nibh ipsum, finibus at neque venenatis, ultricies sagittis mi. Phasellus malesuada quam ac erat dapibus, eget ullamcorper eros porta. Nulla nisl nisi, fermentum commodo porttitor consectetur, auctor nec odio. Interdum et malesuada fames ac ante ipsum primis in faucibus.
             <br>
             <br>
@@ -165,9 +165,9 @@
             <br>
             <br>
 
-            In ut gravida mauris. Sed tempus orci a lacus hendrerit ornare. Nunc venenatis ac felis non aliquet. Sed fermentum tellus at porta molestie. Donec luctus pulvinar augue. Cras non leo id nisl tincidunt fermentum. Mauris et orci ac diam lacinia aliquet.
+            In ut gravida mauris. Sed tempus orci a lacus hendrerit ornare. Nunc venenatis ac felis non aliquet. Sed fermentum tellus at porta molestie. Donec luctus pulvinar augue. Cras non leo id nisl tincidunt fermentum. Mauris et orci ac diam lacinia aliquet. -->
           </div>
-        </Transition>
+        <!-- </Transition> -->
       </section>
     </div>
   </main>
@@ -274,7 +274,7 @@
   }
 
   .project .content {
-    font-size: 1.8rem;
+    font-size: 1rem;
     margin-bottom: auto;
   }
 
