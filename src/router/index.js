@@ -17,11 +17,6 @@ const router = createRouter({
         },
       ]
     },
-    // {
-    //   path: '/projects/:projectSlug',
-    //   name: 'project',
-    //   component: ProjectView
-    // },
     {
       path: '/about',
       name: 'about',
@@ -30,7 +25,30 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue')
     }
-  ]
+  ],
+  
+  // Nothing works for now :(
+  // scrollBehavior(to, from, savedPosition) {
+  //   if(savedPosition && to.name == "home" && from.name == "project" && from.params.projectSlug) {
+  //     console.log(savedPosition)
+  //     return new Promise((resolve, reject) => {
+  //       setTimeout(() => {
+  //         resolve({ 
+  //         //   left: 0, 
+  //         //   top: 0, 
+  //           el: document.querySelector(`.project-${from.params.projectSlug}`),
+  //           behavior: 'smooth'
+  //         })
+  //       }, 100)
+  //     })
+  //     return {
+  //       left: 0,
+  //       top: 0,
+  //       // el: document.querySelector(`.project-${from.params.projectSlug}`)
+  //     }
+  //   }
+  //   return { }
+  // },
 })
 
 export default router

@@ -117,8 +117,8 @@
 
     // Animate background
     timeline.to(elBackground, {
-      duration: 1,
-      ease: "power2.out",
+      duration: 3,
+      ease: "power2.inOut",
       opacity: 1
     })
 
@@ -141,6 +141,9 @@
     const timeline = gsap.timeline()
     const elProject = el.parentElement.parentElement.parentElement
     const elBackground = elProject.querySelector('.project-bg')
+    
+      document.body.style.overflowY = "scroll"
+      elProject.style.overflowY = "hidden"
 
     // Back to project top
     timeline.to(elProject, {
@@ -165,10 +168,10 @@
     })
 
     // Invert scrollbars between body & project
-    timeline.call(() => {
-      document.body.style.overflowY = "scroll"
-      elProject.style.overflowY = "hidden"
-    })
+    // timeline.call(() => {
+    //   document.body.style.overflowY = "scroll"
+    //   elProject.style.overflowY = "hidden"
+    // })
     
     // Notify transition component that we're done
     timeline.call(done)
@@ -184,7 +187,7 @@
       :scrollTrigger="scrollTrigger3d"
     />
     <div class="projects">
-      <section class="project" :class="{active: isProjectActive(project)}" v-for="(project, index) in projects" :key="index">
+      <section class="project" :class="[{active: isProjectActive(project)}, `project-${project.slug}`]" v-for="(project, index) in projects" :key="index">
         <div class="project-inner">
           <div class="project-bg"></div>
           <div class="project-content">
@@ -192,18 +195,18 @@
               <RouterLink class="link" :to="'/'+project.slug">
                 <h2 class="title" v-html="computeText(project.title)"></h2>
                 <p class="subtitle">{{ project.subtitle }}</p>
-                <div>
-                  <span class="btn">
+                <transition name="fade">
+                  <span class="btn" v-if="!isProjectActive(project)">
                     <span>Fais voir</span>
                     <i class="arrow">
                       <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
                     </i>
                   </span>
-                </div>
+                </transition>
               </RouterLink>
             </div>
             <RouterView :project="project" v-slot="{ Component }">
-              <transition
+              <Transition
                 appear
                 :css="false"
                 @enter="onProjectEnter"
@@ -212,7 +215,7 @@
                 <div class="container" v-if="isProjectActive(project)">
                   <component :is="Component" />
                 </div>
-              </transition>
+              </Transition>
             </RouterView>
           </div>
         </div>
@@ -260,7 +263,7 @@
     top: 0;
     right: 0;
     height: 100%;
-    background: #000a;
+    background: #c06553ee;
     opacity: 0;
   }
 
@@ -271,7 +274,11 @@
     flex-direction: column;
     justify-content: center;
   }
+
   .project .link {
+    position: relative;
+    display: block;
+    padding-bottom: 5rem;
     text-decoration: none;
     color: #ffc;
     font-size: min(3vw, 1.5vh);
@@ -283,7 +290,7 @@
     font-family: 'Allenoire', sans-serif;
     text-shadow: .02em .04em .1em rgba(0, 0, 0, .1); 
     line-height: 1;
-    margin-bottom: .4rem;
+    margin-bottom: .1rem;
   }
 
   .subtitle {
@@ -291,14 +298,16 @@
     letter-spacing: .08em;
     display: inline-block;
     text-transform: uppercase;
-    text-shadow: .03em .05em .4em rgba(0, 0, 0, .1); 
-    margin-bottom: 4rem;
+    text-shadow: .03em .05em .4em rgba(0, 0, 0, .1);
   }
 
   .project .link .btn {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     display: inline-flex;
     align-items: center;
-    gap: .5em;    
+    gap: .5em;
     padding: 1rem 1.6rem .86rem;
     border: 2px solid #ffd04f;
     color: #ffd04f;
@@ -340,16 +349,13 @@
     animation: arrow-hover .4s ease-in-out forwards;
   }
 
-  .project .content.v-enter-active {
-    transition: all 1.2s .8s ease-out;
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 1s easeInOut;
   }
-  .project .content.v-leave-active {
-    transition: all .6s .4s ease-in-out;
-  }
-  
-  .project .content.v-enter-from,
-  .project .content.v-leave-to {
+
+  .fade-enter-from,
+  .fade-leave-to {
     opacity: 0;
-    transform: translateY(40px);
   }
 </style>
