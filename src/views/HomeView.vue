@@ -1,5 +1,6 @@
 <script setup>
-  import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+  import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
+  import { RouterLink, RouterView, useRoute } from 'vue-router'
   import Projects3d from '@/components/Projects3d.vue'
   import projects from '@/data/projects.json'
   
@@ -19,13 +20,19 @@
   }
 
   // ===================================================
-  // Animation
+  // Navigation on homepage, with scrolltrigger+scrub
   // ===================================================
-  onMounted(() => {
+  const scrollTrigger3d = {
+    trigger: ".projects",
+    start: "top top",
+    end: "bottom bottom",
+    scrub: .8,
+  }
 
-    // Animate project titles
+  onMounted(() => {
+    // Create scroll trigger for project content: titles/subtitles/etc.
     Array.from(document.querySelectorAll('.project')).forEach(project => {
-      const projectTrigger = {
+      const scrollTriggerContent = {
         trigger: project,
         start: "top center",
         end: "bottom+=20% center",
@@ -33,7 +40,7 @@
       }
       // Create a timeline to animate title separated letters
       const titleTimeline = gsap.timeline({
-        scrollTrigger: projectTrigger
+        scrollTrigger: scrollTriggerContent
       })
 
       Array.from(project.querySelectorAll('.title .word')).forEach(word => {
@@ -53,7 +60,7 @@
 
       // Animate subtitle (whole block)
       gsap.from(project.querySelector('.subtitle'), {
-        scrollTrigger: projectTrigger,
+        scrollTrigger: scrollTriggerContent,
         duration: .8,
         delay: .1,
         ease: "power3.out",
@@ -61,7 +68,7 @@
         y: 40,
       })
       gsap.from(project.querySelector('.btn'), {
-        scrollTrigger: projectTrigger,
+        scrollTrigger: scrollTriggerContent,
         duration: .2,
         delay: .1,
         ease: "power3.out",
@@ -74,106 +81,148 @@
   })
 
   // ===================================================
-  // Navigation functions
+  // Navigation between "active" projects
   // ===================================================
+  const route = useRoute()
 
-  // Null or index of "open" project
-  const activeProject = ref(null)
-  
-  watch(activeProject, (newValue, oldValue) => {
-    console.log(`from ${oldValue} to ${newValue}`)
-    // Disable window scroll when a project is active
-    document.body.style.overflow = newValue !== null ? "hidden" : null
+  const isAnyProjectActive = computed(() => {
+    return route.name === 'project'
   })
-  
-  // TODO: Old nav: remove
-  const currentIndex = ref(0)
 
-  function previous() {
-    currentIndex.value = getPreviousIndex()
+  function isProjectActive(project) {
+    return isAnyProjectActive && route.params.projectSlug === project.slug
   }
 
-  function next() {
-    currentIndex.value = getNextIndex()
+  function onProjectEnter(el, done) {
+    const timeline = gsap.timeline()
+    const elProject = el.parentElement.parentElement.parentElement
+    const elBackground = elProject.querySelector('.project-bg')
+    const projectClientY = elProject.getBoundingClientRect().top
+    const projectY = projectClientY + window.pageYOffset
+    console.log(projectClientY)
+
+    // Scroll to project 
+    // (this will alose animate the 3d view because of scrolltrigger)
+    timeline.to(window, {
+      duration: Math.abs(projectClientY) * .002, 
+      ease: "power2.inOut",
+      scrollTo: projectY
+    })
+
+    // Invert scrollbars between body & project
+    timeline.call(() => {
+      document.body.style.overflowY = "hidden"
+      elProject.style.overflowY = "scroll"
+    })
+
+    // Animate background
+    timeline.to(elBackground, {
+      duration: 1,
+      ease: "power2.out",
+      opacity: 1
+    })
+
+    // Animate content in
+    timeline.fromTo(el, {
+      opacity: 0,
+      y: 100,
+    }, {
+      duration: 1,
+      ease: "power4.out",
+      opacity: 1,
+      y: 0,
+    }, "<")
+
+    // Notify transition component that we're done
+    timeline.call(done)
   }
 
-  function getPreviousIndex() {
-    let target = currentIndex.value - 1
-    return target < 0 ? projects.length - 1 : target
-  }
+  function onProjectLeave(el, done) {
+    const timeline = gsap.timeline()
+    const elProject = el.parentElement.parentElement.parentElement
+    const elBackground = elProject.querySelector('.project-bg')
 
-  function getNextIndex() {
-    let target = currentIndex.value + 1
-    return target > projects.length - 1 ? 0 : target
-  }
+    // Back to project top
+    timeline.to(elProject, {
+      duration: 1, 
+      ease: "power2.inOut",
+      scrollTo: 0
+    })
 
-  
-  // ===================================================
-  // Nav
-  // ===================================================
-  // TODO: replace activeProject with router params/name
+    // Animate content out
+    timeline.to(el, {
+      duration: 1,
+      ease: "power4.in",
+      opacity: 0,
+      // y: 100,
+    }, "<")
+
+    // Animate background
+    timeline.to(elBackground, {
+      duration: 1,
+      ease: "power2.out",
+      opacity: 0
+    })
+
+    // Invert scrollbars between body & project
+    timeline.call(() => {
+      document.body.style.overflowY = "scroll"
+      elProject.style.overflowY = "hidden"
+    })
+    
+    // Notify transition component that we're done
+    timeline.call(done)
+  }
 
 </script>
 
 <template>
   <main>
-    <div>
-      <button @click="previous">Précédent</button>
-      <button @click="next">Suivant</button>
-    </div>
     <Projects3d 
-      :currentIndex="currentIndex"
       :projects="projects"
-      :activeProject="activeProject"
-      scrollTriggerElement=".projects"
+      :activeProject="route.params.projectSlug"
+      :scrollTrigger="scrollTrigger3d"
     />
-    <div class="projects" :class="{'has-active': activeProject !== null}">
-      <section class="project" :class="{active: index === activeProject}" v-for="(project, index) in projects" :key="index">
-        <div class="header container">
-          <!-- <a class="link" href="#" @click.prevent="activeProject=index"> -->
-          <router-link class="link" :to="'/projects/'+project.slug">
-            <h2 class="title" v-html="computeText(project.title)"></h2>
-            <p class="subtitle">{{ project.subtitle }}</p>
-            <div>
-              <span class="btn">
-                  <span>Fais voir</span>
-                <i class="arrow">
-                  <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
-                </i>
-              </span>
+    <div class="projects">
+      <section class="project" :class="{active: isProjectActive(project)}" v-for="(project, index) in projects" :key="index">
+        <div class="project-inner">
+          <div class="project-bg"></div>
+          <div class="project-content">
+            <div class="header container">
+              <RouterLink class="link" :to="'/'+project.slug">
+                <h2 class="title" v-html="computeText(project.title)"></h2>
+                <p class="subtitle">{{ project.subtitle }}</p>
+                <div>
+                  <span class="btn">
+                    <span>Fais voir</span>
+                    <i class="arrow">
+                      <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
+                    </i>
+                  </span>
+                </div>
+              </RouterLink>
             </div>
-          </router-link>
-        </div>
-        <!-- <Transition> -->
-          <!-- <div class="content container" v-if="index === activeProject"> -->
-          <div class="content container" v-if="$route.name == 'project'">
-            Foobar
-            <!-- <RouterView /> -->
-            <!-- <a class="btn" href="#" @click.prevent="activeProject=null">Quitter</a>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla iaculis est non consequat vestibulum. Etiam mi metus, suscipit sit amet posuere vel, auctor vitae lacus. Mauris tempor, lorem non dignissim rhoncus, risus odio mollis enim, in commodo tortor turpis et neque. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Duis augue augue, porttitor vel elementum faucibus, faucibus quis neque. Maecenas quis sagittis lorem, sit amet consequat quam. Suspendisse potenti. Quisque non blandit augue. Vivamus consequat tellus quis tellus varius vehicula. Aliquam vitae ornare sapien, sit amet ornare mauris. Donec nibh ipsum, finibus at neque venenatis, ultricies sagittis mi. Phasellus malesuada quam ac erat dapibus, eget ullamcorper eros porta. Nulla nisl nisi, fermentum commodo porttitor consectetur, auctor nec odio. Interdum et malesuada fames ac ante ipsum primis in faucibus.
-            <br>
-            <br>
-            Integer lorem nibh, vestibulum nec eros porta, posuere elementum lorem. In hac habitasse platea dictumst. Maecenas vitae sollicitudin nisi. Suspendisse nisl urna, aliquam ut turpis non, tempus tincidunt metus. Donec dictum nunc eu fringilla convallis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer elementum dui id nisi pretium, eu feugiat metus dapibus. Nunc nec finibus ex.
-
-            <br>
-            <br>
-            Vivamus dictum porttitor posuere. Suspendisse mattis in metus eget fringilla. Sed sit amet blandit felis, sed efficitur dolor. Praesent egestas maximus risus vitae fermentum. Donec tincidunt, ipsum in accumsan imperdiet, ligula nulla laoreet est, id tincidunt nibh leo vitae dolor. In auctor urna in nisl dignissim lobortis. Nam consectetur ipsum sed nisl facilisis hendrerit. Etiam efficitur vitae libero at varius. Curabitur iaculis tellus non nunc vestibulum euismod. Etiam porttitor, ante vitae volutpat rhoncus, neque felis ornare est, vel scelerisque erat orci et erat. Nulla a velit sit amet neque mollis vulputate quis in risus. Suspendisse potenti. Sed vel libero vel sem venenatis sollicitudin vel vitae lorem. Fusce tristique luctus quam.
-            <br>
-            <br>
-
-            Etiam venenatis mi nec nulla placerat venenatis. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla eget quam sed nunc tristique vestibulum a a justo. Ut dignissim, arcu vel egestas tincidunt, magna ligula pulvinar purus, nec sollicitudin nisl eros non libero. Suspendisse in varius risus. Sed quis dui non odio ultricies aliquam quis quis ex. Pellentesque pharetra at nisl nec condimentum. Nunc pretium velit augue, eu semper neque aliquam eget. Nam ut sapien a lectus finibus fringilla non et metus. Cras vel ligula sed lacus pharetra cursus.
-            <br>
-            <br>
-
-            In ut gravida mauris. Sed tempus orci a lacus hendrerit ornare. Nunc venenatis ac felis non aliquet. Sed fermentum tellus at porta molestie. Donec luctus pulvinar augue. Cras non leo id nisl tincidunt fermentum. Mauris et orci ac diam lacinia aliquet. -->
+            <RouterView :project="project" v-slot="{ Component }">
+              <transition
+                appear
+                :css="false"
+                @enter="onProjectEnter"
+                @leave="onProjectLeave"
+              >
+                <div class="container" v-if="isProjectActive(project)">
+                  <component :is="Component" />
+                </div>
+              </transition>
+            </RouterView>
           </div>
-        <!-- </Transition> -->
+        </div>
       </section>
     </div>
   </main>
 </template>
 
 <style scoped>
+
   button {
     position: relative;
     z-index: 10;
@@ -189,12 +238,30 @@
     transition: background-color 3s ease-in-out;
   }
 
-  .projects.has-active {
-    background-color: #3a213add;
-  }
-
   .project {
     height: 100vh;
+    border: 4px solid red;
+    /* margin-bottom: -20vh; */
+  }
+
+  .project .project-inner {
+    position: relative;
+  }
+
+  .project .project-content {
+    position: relative;
+    z-index: 100;
+  }
+
+  .project .project-bg {
+    position: absolute;
+    z-index: 90;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background: #000a;
+    opacity: 0;
   }
 
   .project .header {
@@ -271,16 +338,6 @@
   }
   .project .link:hover .btn .arrow svg {
     animation: arrow-hover .4s ease-in-out forwards;
-  }
-
-  .project .content {
-    font-size: 1rem;
-    margin-bottom: auto;
-  }
-
-  /* Animation for active project */
-  .project.active {
-    overflow-y: scroll;
   }
 
   .project .content.v-enter-active {

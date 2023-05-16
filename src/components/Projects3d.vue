@@ -13,64 +13,70 @@
   import { CustomEase } from "gsap/CustomEase"
   gsap.registerPlugin(CustomEase)
 
+
   // ===================================================
   // Here override threeJS parameters
   // ===================================================
+
   const sceneSettings = {
     enableGui: true,
     enableOrbit: false,
     enableAxesHelper: false,    
   }
 
+
   // ===================================================
   // Props
   // ===================================================
+
   const props = defineProps({
     projects: {
       type: Array,
       required: true
     },
     activeProject: {
-      type: Number,
+      type: String,
       required: false,
     },
-    settings: {
-      type: Object,
+    scrollTrigger: {
+      type:Object,
       required: false
-    },
-    currentIndex: {
-      type: Number,
-      required: true
-    },
-    scrollTriggerElement: {
-      type:String,
-      required: true
     }
   })
-  
+
+
   // ===================================================
   // Refs
   // ===================================================
-  const threeCanvas = ref(null)
 
+  const threeCanvas = ref(null)
   
+
   // ===================================================
   // ThreeJS scene and events
   // ===================================================
+
   // 3D scene
-  const projectsScene = new ProjectsScene(props.settings)
+  const projectsScene = new ProjectsScene(sceneSettings)
 
   // Resize
   const sizes = useResize(threeCanvas, projectsScene.resize.bind(projectsScene))
   const mousePosition = useMousePosition(projectsScene.handleParallax.bind(projectsScene))
 
-  // Mounted: init scene
+
+  // ===================================================
+  // Vue hooks and watchers
+  // ===================================================
+
+  // Init scene
   onMounted(async () => {
-    projectsScene.init(props.projects, threeCanvas.value, props.scrollTriggerElement)
+    projectsScene.init(props.projects, threeCanvas.value, props.scrollTrigger)
   })
   
-  // Watch activeproject
-  watch(() => props.activeProject, projectsScene.onActiveProjectChange.bind(projectsScene))
+  // Watch active project slug
+  watch(() => props.activeProject, (newValue, oldValue) => {
+    projectsScene.setActiveProject(newValue, oldValue)
+  })
 
 </script>
 

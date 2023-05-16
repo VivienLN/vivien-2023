@@ -76,7 +76,7 @@ export default class ProjectsScene {
   settings = {}
   projects = []
   canvas
-  scrollTriggerElement
+  scrollTrigger
 
   camera
   cameraActiveGroup
@@ -102,10 +102,10 @@ export default class ProjectsScene {
   // ===================================================
   // Initialize with projects and canvas
   // ===================================================
-  init(projects, canvas, scrollTriggerElement) {
+  init(projects, canvas, scrollTrigger) {
     this.projects = projects
     this.canvas = canvas
-    this.scrollTriggerElement = scrollTriggerElement
+    this.scrollTrigger = scrollTrigger
 
     const loadingManager = new THREE.LoadingManager()
     loadingManager.onLoad = this.onLoad.bind(this)
@@ -195,12 +195,7 @@ export default class ProjectsScene {
     }
 
     this.projectsTimeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: this.scrollTriggerElement,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: .8,
-      }
+      scrollTrigger: this.scrollTrigger
     })
     this.projects.forEach((project, i) => {
       let {x, y, z} = project.object3d.cameraTargetPosition
@@ -229,7 +224,7 @@ export default class ProjectsScene {
           y: s.viewpointRotationY,
         }, "<")
       }
-      this.projectsTimeline.addLabel(`project-${i}`)
+      this.projectsTimeline.addLabel(`project-${project.slug}`)
     })
   }
 
@@ -318,20 +313,13 @@ export default class ProjectsScene {
   // ===================================================
   // Move camera when active project changes
   // ===================================================
-  onActiveProjectChange(newValue, oldValue) {
+  setActiveProject(newValue, oldValue) {
     const s = this.settings
 
-    if(newValue !== null) {
+    // Note: values are slugs
+    if(newValue !== null && newValue !== undefined) {
       var target = s.viewpointActive
       var rotationY = s.viewPointActiveRotationY
-
-      // Also: scroll to project in window (this will align cameraGroup too)
-      let scrollY = this.projectsTimeline.scrollTrigger.labelToScroll(`project-${newValue}`)
-      gsap.to(window, {
-        duration: s.activeTransitionDuration / 2, 
-        ease: s.activeTransitionEase,
-        scrollTo: scrollY
-      });
 
     } else {
       var target = new THREE.Vector3(0, 0, 0)
