@@ -263,7 +263,7 @@
     top: 0;
     right: 0;
     height: 100%;
-    background: #c06553ee;
+    background: #211d2bee;
     opacity: 0;
   }
 

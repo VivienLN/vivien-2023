@@ -3,42 +3,42 @@
     "slug": "adidas-decathlon",
     "title": "Adidas × Decathlon",
     "subtitle": "Store pages",
-    "image": "adidas2.png"
+    "image": "adidas/thumb3d.png"
   },
   {
     "slug": "jam-gg",
     "title": "Jam.gg",
     "subtitle": "Retrogaming website",
-    "image": "playstation.png"
+    "image": "jamgg/thumb3d.png"
   },
   {
     "slug": "the-sinking-city",
     "title": "The Sinking City",
     "subtitle": "Official website",
-    "image": "sinking.png"
+    "image": "sinkingcity/thumb3d.png"
   },
   {
     "slug": "ni-no-kuni-2",
     "title": "Ni No Kuni 2",
     "subtitle": "Official website",
-    "image": "nnk2.png"
+    "image": "ninokuni2/thumb3d.png"
   },
   {
     "slug": "adidas-decathlon-2",
     "title": "Adidas x Decathlon",
     "subtitle": "Store pages",
-    "image": "adidas2.png"
+    "image": "adidas/thumb3d.png"
   },
   {
     "slug": "the-sinking-city-2",
     "title": "The Sinking City",
     "subtitle": "Official website",
-    "image": "sinking.png"
+    "image": "sinkingcity/thumb3d.png"
   },
   {
     "slug": "ni-no-kuni-2-2",
     "title": "Ni No Kuni 2",
     "subtitle": "Official website",
-    "image": "nnk2.png"
+    "image": "ninokuni2/thumb3d.png"
   }
 ]
