@@ -16,8 +16,6 @@
   const wrapper = ref(null)
 
   onMounted(() => {
-    console.log("wrapper", wrapper.value)
-
     gsap.from(wrapper.value, {
       scrollTrigger: props.scrollTrigger,
       ...props.from
