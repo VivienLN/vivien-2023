@@ -11,7 +11,7 @@
       type: Object,
       required: false
     },
-    vars: {
+    from: {
       type: Object,
       required: true
     },
@@ -47,7 +47,7 @@
       // word.style.display = "inline-block"
       Array.from(word.querySelectorAll('span')).forEach(letter => {
         // letter.style.display = "inline-block"
-        titleTimeline.from(letter, props.vars, delay)
+        titleTimeline.from(letter, props.from, delay)
       })
     })
   })

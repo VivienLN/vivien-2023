@@ -2,6 +2,7 @@
   import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
   import { RouterLink, RouterView, useRoute } from 'vue-router'
   import AnimatedLetters from '@/components/AnimatedLetters.vue'
+  import ScrollTriggerAnimation from '@/components/ScrollTriggerAnimation.vue'
   import Projects3d from '@/components/Projects3d.vue'
   import projects from '@/data/projects.json'
   
@@ -40,46 +41,14 @@
     end: "bottom+=20% center",
     toggleActions: "play reset restart reset",
   }
-  const gsapVarsTitle = {
-    duration: .6,
+  const gsapTitleFrom = {
+    duration: .4,
     ease: "power2.out",
     opacity: 0,
     y: 80,
     scale: .6,
   }
-  const gsapDelayTitle = "<6%"
-  const gsapVarsSubtitle = {
-    duration: 1,
-    ease: "power2.out",
-    opacity: 0,
-    y: 30,
-  }
-  const gsapDelaySubtitle = "<0"
-
-  onMounted(() => {
-    // Create scroll trigger for project content: titles/subtitles/etc.
-    Array.from(document.querySelectorAll('.project')).forEach(project => {
-      // Animate subtitle (whole block)
-      // gsap.from(project.querySelector('.subtitle'), {
-      //   scrollTrigger: scrollTriggerContent,
-      //   duration: .8,
-      //   delay: .1,
-      //   ease: "power3.out",
-      //   opacity: 0,
-      //   y: 40,
-      // })
-      // gsap.from(project.querySelector('.btn'), {
-      //   scrollTrigger: scrollTriggerContent,
-      //   duration: .2,
-      //   delay: .1,
-      //   ease: "power3.out",
-      //   opacity: 0,
-      //   y: 20,
-      // })
-
-      
-    })
-  })
+  const gsapTitleDelay = "<6%"
 
   // ===================================================
   // Navigation between "active" projects
@@ -175,26 +144,28 @@
               <AnimatedLetters 
                 :text="project.title" 
                 :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
-                :vars="gsapVarsTitle"
-                :delay="gsapDelayTitle"
+                :from="gsapTitleFrom"
+                :delay="gsapTitleDelay"
               />
             </h2>
-            <p class="subtitle">
-              <AnimatedLetters 
-                :text="project.subtitle" 
+            <ScrollTriggerAnimation
                 :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
-                :vars="gsapVarsSubtitle"
-                :delay="gsapDelaySubtitle"
-              />
-            </p>
-            <transition name="fade">
-              <span class="btn" v-if="!isProjectActive(project)">
+                :from="{duration: .6, opacity: 0, y: 60, ease: 'power3.out', delay: .1}"
+            >
+              <p class="subtitle">{{ project.subtitle }}</p>
+            </ScrollTriggerAnimation>
+            
+            <ScrollTriggerAnimation
+                :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
+                :from="{duration: .6, opacity: 0, y: 60, ease: 'power3.out', delay: .2}"
+            >
+              <span class="btn">
                 <span>Fais voir</span>
                 <i class="arrow">
                   <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
                 </i>
               </span>
-            </transition>
+            </ScrollTriggerAnimation>
           </RouterLink>
         </div>
       </section>
@@ -256,12 +227,11 @@
     display: inline-block;
     text-transform: uppercase;
     text-shadow: .03em .05em .4em rgba(0, 0, 0, .1);
+    margin-bottom: 1rem;
   }
 
   .project .link .btn {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: .5em;
@@ -304,16 +274,6 @@
   }
   .project .link:hover .btn .arrow svg {
     animation: arrow-hover .4s ease-in-out forwards;
-  }
-
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 1s easeInOut;
-  }
-
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
   }
 
   .project-overlay {
