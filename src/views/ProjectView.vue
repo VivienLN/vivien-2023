@@ -4,7 +4,7 @@
   const props = defineProps({
     project: {
       type: Object,
-      required: true
+      required: false
     }
   })
 
@@ -14,7 +14,7 @@
 
 <template>
   <div>
-    Project view: {{ project.slug }}
+    Project view: {{ $route.params.projectSlug }}
     <div>
       <router-link class="link" to="/">Retour</router-link>
     </div>

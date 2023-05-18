@@ -9,6 +9,8 @@
   gsap.registerPlugin(ScrollTrigger)
   import { ScrollToPlugin } from "gsap/ScrollToPlugin"
   gsap.registerPlugin(ScrollToPlugin)
+  import { CustomEase } from "gsap/CustomEase"
+  gsap.registerPlugin(CustomEase)
 
   // ===================================================
   // Text mangagement
@@ -95,42 +97,18 @@
 
   function onProjectEnter(el, done) {
     const timeline = gsap.timeline()
-    const elProject = el.parentElement.parentElement.parentElement
-    const elBackground = elProject.querySelector('.project-bg')
-    const projectClientY = elProject.getBoundingClientRect().top
-    const projectY = projectClientY + window.pageYOffset
-    console.log(projectClientY)
+    const elProjectView = el.querySelector('.project-view')
 
-    // Scroll to project 
-    // (this will alose animate the 3d view because of scrolltrigger)
-    timeline.to(window, {
-      duration: Math.abs(projectClientY) * .002, 
+    document.body.style.overflowY = "hidden"
+    timeline.from(elProjectView, {
+      left: "100%",
+      duration: 2,
+      ease: "power3.inOut",
+    })
+    timeline.from(el, {
+      backgroundColor: "#00000000",
+      duration: 2.4,
       ease: "power2.inOut",
-      scrollTo: projectY
-    })
-
-    // Invert scrollbars between body & project
-    timeline.call(() => {
-      document.body.style.overflowY = "hidden"
-      elProject.style.overflowY = "scroll"
-    })
-
-    // Animate background
-    timeline.to(elBackground, {
-      duration: 3,
-      ease: "power2.inOut",
-      opacity: 1
-    })
-
-    // Animate content in
-    timeline.fromTo(el, {
-      opacity: 0,
-      y: 100,
-    }, {
-      duration: 1,
-      ease: "power4.out",
-      opacity: 1,
-      y: 0,
     }, "<")
 
     // Notify transition component that we're done
@@ -139,40 +117,21 @@
 
   function onProjectLeave(el, done) {
     const timeline = gsap.timeline()
-    const elProject = el.parentElement.parentElement.parentElement
-    const elBackground = elProject.querySelector('.project-bg')
-    
-      document.body.style.overflowY = "scroll"
-      elProject.style.overflowY = "hidden"
+    const elProjectView = el.querySelector('.project-view')
 
-    // Back to project top
-    timeline.to(elProject, {
-      duration: 1, 
-      ease: "power2.inOut",
-      scrollTo: 0
+    timeline.to(elProjectView, {
+      left: "100%",
+      duration: 2,
+      ease: "power3.inOut",
     })
-
-    // Animate content out
     timeline.to(el, {
-      duration: 1,
-      ease: "power4.in",
-      opacity: 0,
-      // y: 100,
+      backgroundColor: "#00000000",
+      duration: 2.4,
+      ease: "power2.inOut",
     }, "<")
-
-    // Animate background
-    timeline.to(elBackground, {
-      duration: 1,
-      ease: "power2.out",
-      opacity: 0
-    })
-
-    // Invert scrollbars between body & project
-    // timeline.call(() => {
-    //   document.body.style.overflowY = "scroll"
-    //   elProject.style.overflowY = "hidden"
-    // })
     
+    timeline.call(() => document.body.style.overflowY = null, [], "-=1")
+
     // Notify transition component that we're done
     timeline.call(done)
   }
@@ -181,6 +140,24 @@
 
 <template>
   <main>
+    <RouterView v-slot="{ Component }">
+      <Teleport to="body">
+          <Transition
+            appear
+            :css="false"
+            @enter="onProjectEnter"
+            @leave="onProjectLeave"
+          >
+            <!-- These elements are here instead of inside the view component
+            so we can animate everything with the same timeline -->
+            <div class="project-overlay" v-if="route.name == 'project'">
+              <div class="project-view">
+                <component :is="Component" />
+              </div>
+            </div>
+          </Transition>
+      </Teleport>
+    </RouterView>
     <Projects3d 
       :projects="projects"
       :activeProject="route.params.projectSlug"
@@ -188,36 +165,19 @@
     />
     <div class="projects">
       <section class="project" :class="[{active: isProjectActive(project)}, `project-${project.slug}`]" v-for="(project, index) in projects" :key="index">
-        <div class="project-inner">
-          <div class="project-bg"></div>
-          <div class="project-content">
-            <div class="header container">
-              <RouterLink class="link" :to="'/'+project.slug">
-                <h2 class="title" v-html="computeText(project.title)"></h2>
-                <p class="subtitle">{{ project.subtitle }}</p>
-                <transition name="fade">
-                  <span class="btn" v-if="!isProjectActive(project)">
-                    <span>Fais voir</span>
-                    <i class="arrow">
-                      <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
-                    </i>
-                  </span>
-                </transition>
-              </RouterLink>
-            </div>
-            <RouterView :project="project" v-slot="{ Component }">
-              <Transition
-                appear
-                :css="false"
-                @enter="onProjectEnter"
-                @leave="onProjectLeave"
-              >
-                <div class="container" v-if="isProjectActive(project)">
-                  <component :is="Component" />
-                </div>
-              </Transition>
-            </RouterView>
-          </div>
+        <div class="header container">
+          <RouterLink class="link" :to="'/'+project.slug">
+            <h2 class="title" v-html="computeText(project.title)"></h2>
+            <p class="subtitle">{{ project.subtitle }}</p>
+            <transition name="fade">
+              <span class="btn" v-if="!isProjectActive(project)">
+                <span>Fais voir</span>
+                <i class="arrow">
+                  <svg viewBox="6 4 14 18"><path d="M13.293 7.293a.999.999 0 0 0 0 1.414L15.586 11H8a1 1 0 0 0 0 2h7.586l-2.293 2.293a.999.999 0 1 0 1.414 1.414L19.414 12l-4.707-4.707a.999.999 0 0 0-1.414 0z"/></svg>
+                </i>
+              </span>
+            </transition>
+          </RouterLink>
         </div>
       </section>
     </div>
@@ -245,26 +205,6 @@
     height: 100vh;
     border: 4px solid red;
     /* margin-bottom: -20vh; */
-  }
-
-  .project .project-inner {
-    position: relative;
-  }
-
-  .project .project-content {
-    position: relative;
-    z-index: 100;
-  }
-
-  .project .project-bg {
-    position: absolute;
-    z-index: 90;
-    left: 0;
-    top: 0;
-    right: 0;
-    height: 100%;
-    background: #211d2bee;
-    opacity: 0;
   }
 
   .project .header {
@@ -357,5 +297,27 @@
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
+  }
+
+  .project-overlay {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #0004;
+  }
+
+  .project-view {
+    position: fixed;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    z-index: 110;
+    top: 0;
+    left: 10%;
+    width: 90%;
+    height: 100%;
+    background: #000;
   }
 </style>

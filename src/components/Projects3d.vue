@@ -10,8 +10,6 @@
   import gsap from "gsap"
   import { ScrollTrigger } from "gsap/ScrollTrigger"
   gsap.registerPlugin(ScrollTrigger)
-  import { CustomEase } from "gsap/CustomEase"
-  gsap.registerPlugin(CustomEase)
 
 
   // ===================================================
