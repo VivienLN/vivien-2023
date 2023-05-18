@@ -2,8 +2,8 @@
   import { usePinBody } from '../composables/pinbody.js'
 
   const props = defineProps({
-    project: {
-      type: Object,
+    ready: {
+      type: Boolean,
       required: false
     }
   })
@@ -14,6 +14,7 @@
 
 <template>
   <div>
+    Ready: {{ props.ready }}
     Project view: {{ $route.params.projectSlug }}
     <div>
       <router-link class="link" to="/">Retour</router-link>

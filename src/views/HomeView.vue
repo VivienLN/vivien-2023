@@ -1,6 +1,7 @@
 <script setup>
   import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
   import { RouterLink, RouterView, useRoute } from 'vue-router'
+  import AnimatedLetters from '@/components/AnimatedLetters.vue'
   import Projects3d from '@/components/Projects3d.vue'
   import projects from '@/data/projects.json'
   
@@ -31,52 +32,50 @@
     scrub: .8,
   }
 
+  // ===================================================
+  // Animation inside project titles etc.
+  // ===================================================
+  const scrollTriggerContent = {
+    start: "top center",
+    end: "bottom+=20% center",
+    toggleActions: "play reset restart reset",
+  }
+  const gsapVarsTitle = {
+    duration: .6,
+    ease: "power2.out",
+    opacity: 0,
+    y: 80,
+    scale: .6,
+  }
+  const gsapDelayTitle = "<6%"
+  const gsapVarsSubtitle = {
+    duration: 1,
+    ease: "power2.out",
+    opacity: 0,
+    y: 30,
+  }
+  const gsapDelaySubtitle = "<0"
+
   onMounted(() => {
     // Create scroll trigger for project content: titles/subtitles/etc.
     Array.from(document.querySelectorAll('.project')).forEach(project => {
-      const scrollTriggerContent = {
-        trigger: project,
-        start: "top center",
-        end: "bottom+=20% center",
-        toggleActions: "play reset restart reset",
-      }
-      // Create a timeline to animate title separated letters
-      const titleTimeline = gsap.timeline({
-        scrollTrigger: scrollTriggerContent
-      })
-
-      Array.from(project.querySelectorAll('.title .word')).forEach(word => {
-        word.style.display = "inline-block"
-        Array.from(word.querySelectorAll('span')).forEach(letter => {
-          letter.style.display = "inline-block"
-          titleTimeline.from(letter, {
-            duration: .6,
-            ease: "power2.out",
-            opacity: 0,
-            x: 10,
-            y: 80,
-            scale: .8,
-          }, "<.025")
-        })
-      })
-
       // Animate subtitle (whole block)
-      gsap.from(project.querySelector('.subtitle'), {
-        scrollTrigger: scrollTriggerContent,
-        duration: .8,
-        delay: .1,
-        ease: "power3.out",
-        opacity: 0,
-        y: 40,
-      })
-      gsap.from(project.querySelector('.btn'), {
-        scrollTrigger: scrollTriggerContent,
-        duration: .2,
-        delay: .1,
-        ease: "power3.out",
-        opacity: 0,
-        y: 20,
-      })
+      // gsap.from(project.querySelector('.subtitle'), {
+      //   scrollTrigger: scrollTriggerContent,
+      //   duration: .8,
+      //   delay: .1,
+      //   ease: "power3.out",
+      //   opacity: 0,
+      //   y: 40,
+      // })
+      // gsap.from(project.querySelector('.btn'), {
+      //   scrollTrigger: scrollTriggerContent,
+      //   duration: .2,
+      //   delay: .1,
+      //   ease: "power3.out",
+      //   opacity: 0,
+      //   y: 20,
+      // })
 
       
     })
@@ -86,6 +85,7 @@
   // Navigation between "active" projects
   // ===================================================
   const route = useRoute()
+  const projectViewReady = ref(false)
 
   const isAnyProjectActive = computed(() => {
     return route.name === 'project'
@@ -110,6 +110,10 @@
       duration: 2.4,
       ease: "power2.inOut",
     }, "<")
+
+    // Start project component animations
+    timeline.call(() => {projectViewReady.value = true; 
+    console.log(projectViewReady.value)})
 
     // Notify transition component that we're done
     timeline.call(done)
@@ -152,7 +156,7 @@
             so we can animate everything with the same timeline -->
             <div class="project-overlay" v-if="route.name == 'project'">
               <div class="project-view">
-                <component :is="Component" />
+                <component :is="Component" :ready="projectViewReady" />
               </div>
             </div>
           </Transition>
@@ -167,8 +171,22 @@
       <section class="project" :class="[{active: isProjectActive(project)}, `project-${project.slug}`]" v-for="(project, index) in projects" :key="index">
         <div class="header container">
           <RouterLink class="link" :to="'/'+project.slug">
-            <h2 class="title" v-html="computeText(project.title)"></h2>
-            <p class="subtitle">{{ project.subtitle }}</p>
+            <h2 class="title">
+              <AnimatedLetters 
+                :text="project.title" 
+                :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
+                :vars="gsapVarsTitle"
+                :delay="gsapDelayTitle"
+              />
+            </h2>
+            <p class="subtitle">
+              <AnimatedLetters 
+                :text="project.subtitle" 
+                :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
+                :vars="gsapVarsSubtitle"
+                :delay="gsapDelaySubtitle"
+              />
+            </p>
             <transition name="fade">
               <span class="btn" v-if="!isProjectActive(project)">
                 <span>Fais voir</span>
@@ -203,7 +221,6 @@
 
   .project {
     height: 100vh;
-    border: 4px solid red;
     /* margin-bottom: -20vh; */
   }
 
