@@ -20,16 +20,14 @@
 </script>
 
 <template>
-  <div :class="`project-view-${project.slug}`">
-
-    <Header v-bind="project" :ready="ready" />
+  <div v-if="ready">
+    <Header v-bind="project" />
     <Content :content="project.content" />
     
     Ready: {{ ready }}
     <div>
       <router-link class="link" to="/">Retour</router-link>
     </div>
-
   </div>
 </template>
 

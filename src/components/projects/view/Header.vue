@@ -32,10 +32,6 @@
       type: Array,
       required: false
     },
-    ready: {
-      type: Boolean,
-      required: false
-    },
   })
 
   
@@ -61,17 +57,10 @@
           :text="title" 
           :from="gsapTitleFrom"
           :delay="gsapTitleDelay"
-          :enabled="ready"
         />
-      </Title>      
+      </Title>
       <Subtitle class="subtitle">
-        <ScrollTriggerAnimation
-          v-if="ready"
-          :scrollTrigger="null"
-          :from="{duration: .6, opacity: 0, y: 60, ease: 'power3.out', delay: .1}"
-        >
-          {{ subtitle }}
-        </ScrollTriggerAnimation>
+        {{ subtitle }}
       </Subtitle>
       <Info :data="info" v-if="info" />
     </Container>

@@ -39,6 +39,8 @@
     const timeline = gsap.timeline()
     const elProjectView = el.querySelector('.project-view')
 
+    // projectViewReady.value = true
+
     document.body.style.overflowY = "hidden"
     timeline.from(elProjectView, {
       left: "100%",
@@ -98,8 +100,8 @@
             <!-- These elements are here instead of inside the view component
             so we can animate everything with the same timeline -->
             <div class="project-overlay" v-if="route.name == 'project'">
-              <div class="project-view">
-                <component 
+              <div class="project-view" :id="`project-view-${activeProject.slug}`">
+                <component  
                   :is="Component"
                   :project="activeProject"
                   :ready="projectViewReady"
