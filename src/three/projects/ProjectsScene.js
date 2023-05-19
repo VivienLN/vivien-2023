@@ -112,7 +112,7 @@ export default class ProjectsScene {
     
     const imageLoader = new THREE.ImageLoader(loadingManager)
     this.projects.forEach(project => {
-      imageLoader.load(`/src/assets/projects/${project.image}`, img => { project.imageObject = img })
+      imageLoader.load(`/src/assets/projects/${project.thumbnail}`, img => { project.imageObject = img })
     })
   }
 
