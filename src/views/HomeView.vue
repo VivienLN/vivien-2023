@@ -3,7 +3,7 @@
   import { RouterLink, RouterView, useRoute } from 'vue-router'
   import ProjectSlide from '@/components/projects/ProjectSlide.vue'
   import Projects3d from '@/components/Projects3d.vue'
-  import projects from '@/data/projects.json'
+  import projects from '@/data/projects.js'
   
   import gsap from "gsap"
   import { ScrollTrigger } from "gsap/ScrollTrigger"
