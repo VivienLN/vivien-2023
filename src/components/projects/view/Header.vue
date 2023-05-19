@@ -4,9 +4,19 @@
   import Info from '@/components/projects/view/Info.vue'
   import Title from '@/components/projects/Title.vue'
   import Subtitle from '@/components/projects/Subtitle.vue'
+  import AnimatedLetters from '@/components/AnimatedLetters.vue'
+  import ScrollTriggerAnimation from '@/components/ScrollTriggerAnimation.vue'
+  import { ref, onMounted, defineProps } from 'vue'
 
+  // ===================================================
+  // Props
+  // ===================================================
   const props = defineProps({
     banner: {
+      type: String,
+      required: true
+    },
+    slug: {
       type: String,
       required: true
     },
@@ -22,15 +32,47 @@
       type: Array,
       required: false
     },
+    ready: {
+      type: Boolean,
+      required: false
+    },
   })
+
+  
+  // ===================================================
+  // Animations
+  // ===================================================
+  const gsapTitleFrom = {
+    duration: .4,
+    ease: "power2.out",
+    opacity: 0,
+    y: 80,
+    scale: .6,
+  }
+  const gsapTitleDelay = "<6%"
 </script>
 
 <template>
   <header>
     <img class="banner" :src="projectAsset(banner)" />
     <Container>
-      <Title>{{ title }}</Title>
-      <Subtitle class="subtitle">{{ subtitle }}</Subtitle>
+      <Title>
+        <AnimatedLetters 
+          :text="title" 
+          :from="gsapTitleFrom"
+          :delay="gsapTitleDelay"
+          :enabled="ready"
+        />
+      </Title>      
+      <Subtitle class="subtitle">
+        <ScrollTriggerAnimation
+          v-if="ready"
+          :scrollTrigger="null"
+          :from="{duration: .6, opacity: 0, y: 60, ease: 'power3.out', delay: .1}"
+        >
+          {{ subtitle }}
+        </ScrollTriggerAnimation>
+      </Subtitle>
       <Info :data="info" v-if="info" />
     </Container>
   </header>

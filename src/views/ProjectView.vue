@@ -20,9 +20,9 @@
 </script>
 
 <template>
-  <div>
+  <div :class="`project-view-${project.slug}`">
 
-    <Header v-bind="project" />
+    <Header v-bind="project" :ready="ready" />
     <Content :content="project.content" />
     
     Ready: {{ ready }}

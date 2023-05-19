@@ -7,8 +7,14 @@
       type: String,
       required: true
     },
+    // Use either scrollTrigger or enabled prop to trigger animation
+    // If scrollTrigger is null, animation will be triggered when enabled becomes true
     scrollTrigger: {
       type: Object,
+      required: false
+    },
+    enabled: {
+      type: Boolean,
       required: false
     },
     from: {
@@ -33,7 +39,17 @@
     return `<span class="word">${words.join('</span> <span class="word">')}</span>`
   })
 
-  onMounted(() => {
+  if(props.scrollTrigger != null) {
+    onMounted(createAnimation)
+  } else {
+    watch(() => props.enabled, (value) => {
+      if(value) {
+        createAnimation();
+      }
+    })
+  }
+
+  function createAnimation() {
     const scrollTrigger = props.scrollTrigger || null
     const wrapperElement = wrapper.value
     const delay = props.delay || 0
@@ -50,12 +66,17 @@
         titleTimeline.from(letter, props.from, delay)
       })
     })
-  })
+  }
 
 </script>
 
 <template>
-  <span ref="wrapper" :class="{clip: props.clip}" v-html="computedText"></span>
+  <span 
+    v-show="enabled || scrollTrigger" 
+    ref="wrapper" 
+    :class="{clip: props.clip}" 
+    v-html="computedText"
+  ></span>
 </template>
 
 <style scoped>

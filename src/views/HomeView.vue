@@ -52,7 +52,7 @@
     }, "<")
 
     // Start project component animations
-    timeline.call(() => projectViewReady.value = true)
+    timeline.call(() => projectViewReady.value = true, null, "-=1")
 
     // Notify transition component that we're done
     timeline.call(done)
@@ -74,6 +74,8 @@
     }, "<")
     
     timeline.call(() => document.body.style.overflowY = null, [], "-=1")
+
+    timeline.call(() => projectViewReady.value = false)
 
     // Notify transition component that we're done
     timeline.call(done)
