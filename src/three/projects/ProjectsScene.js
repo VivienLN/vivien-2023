@@ -1,5 +1,6 @@
 // Custom imports
 import Project from './Project.js'
+import { projectAsset } from '../../helpers/projectHelpers.js'
 
 // ThreeJS imports
 import * as THREE from 'three'
@@ -112,7 +113,7 @@ export default class ProjectsScene {
     
     const imageLoader = new THREE.ImageLoader(loadingManager)
     this.projects.forEach(project => {
-      imageLoader.load(`/src/assets/projects/${project.thumbnail}`, img => { project.imageObject = img })
+      imageLoader.load(projectAsset(project.thumbnail), img => { project.imageObject = img })
     })
   }
 

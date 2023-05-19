@@ -1,0 +1,22 @@
+:root {
+  --title-font: 'Allenoire', sans-serif;
+  --title-color: #ffd;
+
+  --body-font: Rubik, sans-serif;
+  --body-bg: #e5685d; /* #e58d76; */
+  --body-color: #f2f2f2;
+
+  --container-width: 1260px;
+  --container-padding: 2rem;
+
+  --project-bg: #111;
+
+  --size-default: 1.1rem;
+  --size-project-title: clamp(3rem, 9vh, 10vw);
+  --size-project-subtitle: clamp(1rem, 2.6vh, 3vw);
+  --size-h1: 5rem;
+  --size-h2: 3.6rem;
+  --size-h3: 2.2rem;
+  --size-h4: 1.8rem;
+  --size-h5: 1.6rem;
+}

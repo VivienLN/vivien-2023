@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap');
+
+@font-face {
+  font-family: "Allenoire";
+  src: local("Allenoire"), url("src/assets/fonts/allenoire.otf") format("opentype");
+}

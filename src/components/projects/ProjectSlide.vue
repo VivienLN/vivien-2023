@@ -2,6 +2,9 @@
   import AnimatedLetters from '@/components/AnimatedLetters.vue'
   import ScrollTriggerAnimation from '@/components/ScrollTriggerAnimation.vue'
   import ButtonArrow from '@/components/ui/ButtonArrow.vue'
+  import Container from '@/components/ui/Container.vue'
+  import Title from '@/components/projects/Title.vue'
+  import Subtitle from '@/components/projects/Subtitle.vue'
 
   // ===================================================
   // Props
@@ -33,21 +36,21 @@
 
 <template>
   <section class="project" :class="`project-${project.slug}`">
-      <div class="header container">
+      <Container class="header">
         <RouterLink class="link" :to="'/'+project.slug">
-          <h2 class="title">
+          <Title>
             <AnimatedLetters 
               :text="project.title" 
               :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
               :from="gsapTitleFrom"
               :delay="gsapTitleDelay"
             />
-          </h2>
+          </Title>
           <ScrollTriggerAnimation
               :scrollTrigger='{...scrollTriggerContent, trigger: `.project-${project.slug}`}'
               :from="{duration: .6, opacity: 0, y: 60, ease: 'power3.out', delay: .1}"
           >
-            <p class="subtitle">{{ project.subtitle }}</p>
+            <Subtitle>{{ project.subtitle }}</Subtitle>
           </ScrollTriggerAnimation>
           
           <ScrollTriggerAnimation
@@ -57,54 +60,31 @@
             <ButtonArrow>Fais voir</ButtonArrow>
           </ScrollTriggerAnimation>
         </RouterLink>
-      </div>
+      </Container>
     </section>
 </template>
 
 <style scoped>
 
-  .container {
-    margin: 0 auto;
-    max-width: 1200px;
-  }
-
   .project {
     height: 100vh;
   }
 
-  .project .header {
+  .header {
     height: 80vh;
-    padding: 20vh 0 0;
+    padding-top: 20vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
 
-  .project .link {
+  .link {
     position: relative;
     display: block;
     padding-bottom: 5rem;
     text-decoration: none;
     color: #ffc;
     font-size: min(3vw, 1.5vh);
-  }
-
-  .title {
-    font-size: min(20vw, 10vh);
-    font-weight: normal;
-    font-family: 'Allenoire', sans-serif;
-    text-shadow: .02em .04em .1em rgba(0, 0, 0, .1); 
-    line-height: 1;
-    margin-bottom: .1rem;
-  }
-
-  .subtitle {
-    font-size: 1.2rem;
-    letter-spacing: .08em;
-    display: inline-block;
-    text-transform: uppercase;
-    text-shadow: .03em .05em .4em rgba(0, 0, 0, .1);
-    margin-bottom: 1rem;
   }
 
   /* Has to be repeated */

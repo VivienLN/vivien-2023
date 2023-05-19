@@ -1,9 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap');
-@font-face {
-  font-family: "Allenoire";
-  src: local("Allenoire"), url("src/assets/fonts/allenoire.otf") format("opentype");
-}
-
 *,
 *::before,
 *::after {
@@ -14,7 +8,8 @@
 
 body {
   min-height: 100vh;
-  color: #ffffdd;
-  background: #e5685d; /* #e58d76; */
-  font-family: Rubik, sans-serif;
+  color: var(--body-color);
+  background: var(--body-bg);
+  font-family: var(--body-font);
+  font-size: var(--size-default);
 }

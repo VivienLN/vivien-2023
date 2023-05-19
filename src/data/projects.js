@@ -1,13 +1,13 @@
 export default [
   {
     slug: "adidas-decathlon",
-    title: "Adidas × Decathlon",
+    title: "Adidas & Decathlon",
     subtitle: "Store pages",
     thumbnail: "adidas/thumb3d.png",
     banner: "adidas/banner.jpg",
     info: [
       {
-        title: "Rôles",
+        title: "Roles",
         items: ["Développement front-end"]
       },
       {
@@ -23,7 +23,7 @@ export default [
         items: ["Adidas"]
       },
       {
-        title: "Année",
+        title: "Annee",
         items: [2021]
       },
     ],
@@ -38,11 +38,14 @@ export default [
       },
       {
         type: "video",
-        url: "adidas/adidas-scroll.mp4"
+        mime: "video/mp4",
+        url: "adidas/adidas-scroll.mp4",
+        variant: "large",
       },
       {
         type: "image",
-        url: "adidas/ecodesign.jpg"
+        url: "adidas/ecodesign.jpg",
+        variant: "container",
       },
     ]
   },

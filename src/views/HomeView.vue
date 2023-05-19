@@ -29,6 +29,12 @@
   const route = useRoute()
   const projectViewReady = ref(false)
 
+  // Active project
+  const activeProject = computed(() => {
+    return projects.find(project => project.slug === route.params.projectSlug)
+  })
+
+  // Animations
   function onProjectEnter(el, done) {
     const timeline = gsap.timeline()
     const elProjectView = el.querySelector('.project-view')
@@ -91,7 +97,11 @@
             so we can animate everything with the same timeline -->
             <div class="project-overlay" v-if="route.name == 'project'">
               <div class="project-view">
-                <component :is="Component" :ready="projectViewReady" />
+                <component 
+                  :is="Component"
+                  :project="activeProject"
+                  :ready="projectViewReady"
+                />
               </div>
             </div>
           </Transition>
@@ -141,7 +151,8 @@
     left: 10%;
     width: 90%;
     height: 100%;
-    background: #000;
+    background: var(--project-bg);
+    box-shadow: -.1rem 0 2rem #00000044;
   }
   
 </style>
